@@ -725,6 +725,13 @@ async function init() {
     clients = await dbAll('clients');
     remplirSelectClients();
     await chargerStats();
+    // Si token déjà sauvegardé, afficher les boutons synchro
+    if (serveurToken) {
+        const actionsCard = document.getElementById('card-actions-render');
+        if (actionsCard) actionsCard.style.display = '';
+        const statusEl = document.getElementById('render-status');
+        if (statusEl) { statusEl.textContent = '✅ Connecté'; statusEl.style.color = '#10b981'; }
+    }
 }
 
 function remplirSelectClients() {
@@ -1589,6 +1596,9 @@ async function connecterRender() {
             localStorage.setItem('nsa_token', serveurToken);
             if (statusEl) { statusEl.textContent = '✅ Connecté à ' + SERVEUR_URL; statusEl.style.color = '#10b981'; }
             toast('✅ Connecté au serveur', 'success');
+            // Afficher les boutons de synchro
+            const actionsCard = document.getElementById('card-actions-render');
+            if (actionsCard) actionsCard.style.display = '';
             // Mettre à jour home status
             const homeStatus = document.getElementById('home-server-status');
             if (homeStatus) { homeStatus.textContent = '✅ Connecté au serveur'; homeStatus.style.background = '#f0fdf4'; homeStatus.style.color = '#065f46'; }
