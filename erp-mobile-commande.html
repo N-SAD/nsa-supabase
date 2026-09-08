@@ -1720,6 +1720,66 @@ async function envoyerSelectionServeur() {
 }
 
 
+async function syncDepuisServeur(store) {
+    const res = document.getElementById('sync-result');
+    res.textContent = '⏳ Chargement ' + store + '...';
+    res.style.color = '#2563eb';
+    try {
+        const r = await fetch(SERVEUR_URL + '/api/export/' + store + '?mobile=1', {
+            headers: {'X-Token': serveurToken},
+            signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 30000); return c.signal; })()
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const txt = await r.text();
+        res.textContent = '⏳ Reçu ' + Math.round(txt.length/1024) + ' Ko - traitement...';
+        let data;
+        try { data = JSON.parse(txt); } catch(e) { throw new Error('JSON invalide'); }
+
+        const items = (data[store] || []).map(it => {
+            const safe = {};
+            for (const [k, v] of Object.entries(it || {})) {
+                if (v === null || v === undefined) { safe[k] = null; continue; }
+                if (typeof v === 'string') {
+                    if (v.startsWith('data:') || v.length > 10000) continue;
+                    safe[k] = v;
+                } else if (typeof v === 'number' || typeof v === 'boolean') {
+                    safe[k] = v;
+                } else if (Array.isArray(v)) {
+                    try { safe[k] = JSON.parse(JSON.stringify(v)); } catch(e) { safe[k] = []; }
+                } else if (typeof v === 'object') {
+                    try { safe[k] = JSON.parse(JSON.stringify(v)); } catch(e) { safe[k] = {}; }
+                }
+            }
+            return safe;
+        });
+
+        if (items.length === 0) {
+            res.textContent = '⚠️ Aucun ' + store + ' sur le serveur';
+            res.style.color = '#f59e0b';
+            return;
+        }
+
+        await dbClear(store);
+        const saved = dbSaveAll(store, items);
+        if (saved) {
+            if (store === 'articles') articles = await dbAll('articles');
+            if (store === 'clients') { clients = await dbAll('clients'); remplirSelectClients(); }
+            const msg = '✅ ' + items.length + ' ' + store + ' chargé(s)';
+            res.textContent = msg;
+            res.style.color = '#10b981';
+            await chargerStats();
+            toast(msg, 'success');
+        } else {
+            res.textContent = '❌ Erreur sauvegarde locale';
+            res.style.color = '#ef4444';
+        }
+    } catch(e) {
+        res.textContent = '❌ ' + e.message;
+        res.style.color = '#ef4444';
+        toast('❌ ' + e.message, 'error');
+    }
+}
+
 async function envoyerToutesCommandesServeur() {
     const res = document.getElementById('sync-result');
     if (!serveurToken) {
