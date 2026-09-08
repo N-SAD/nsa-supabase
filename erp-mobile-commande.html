@@ -266,8 +266,9 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button class="qty-btn" onclick="changeQty(1)">＋</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
-          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="validerRemiseLigne(this)" onclick="this.select()" onkeydown="bloquerScanRemise(event)">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne</label>
+          <button onclick="saisirRemiseLigne()" id="btn-remise-ligne" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;min-width:70px;">0 %</button>
+          <input type="hidden" id="inp-remise-ligne" value="0">
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -283,7 +284,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <!-- Remise globale -->
         <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:6px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
-          <input type="number" id="inp-remise-globale" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="renderPanier()" onclick="this.select()">
+          <button onclick="saisirRemiseGlobale()" id="btn-remise-globale" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;cursor:pointer;min-width:70px;">0 %</button>
+          <input type="hidden" id="inp-remise-globale" value="0">
           <span id="total-remise" style="font-size:12px;color:var(--danger);margin-left:auto;"></span>
         </div>
         <div class="total-bar">
@@ -1017,6 +1019,10 @@ function ajouterAuPanier() {
             tva: '20',
         });
     }
+    // Reset remise ligne
+    document.getElementById('inp-remise-ligne').value = '0';
+    const btnRemise = document.getElementById('btn-remise-ligne');
+    if (btnRemise) { btnRemise.textContent = '0 %'; btnRemise.style.background = '#f1f5f9'; }
     // Vider le champ EAN pour le prochain scan
     const inpEan = document.getElementById('inp-ean');
     if (inpEan) { inpEan.value = ''; inpEan.focus(); }
@@ -1086,6 +1092,28 @@ function renderPanier() {
 
     const ttcEl = document.getElementById('total-ttc');
     if (ttcEl) ttcEl.textContent = totalTTC.toFixed(2).replace('.',',') + ' €';
+}
+
+function saisirRemiseLigne() {
+    const val = prompt('Remise ligne (%) :', document.getElementById('inp-remise-ligne').value || '0');
+    if (val === null) return;
+    const remise = Math.min(100, Math.max(0, parseFloat(val.replace(',','.')) || 0));
+    document.getElementById('inp-remise-ligne').value = remise;
+    document.getElementById('btn-remise-ligne').textContent = remise + ' %';
+    if (remise > 0) document.getElementById('btn-remise-ligne').style.background = '#fef3c7';
+    else document.getElementById('btn-remise-ligne').style.background = '#f1f5f9';
+    mettreAJourPrixRemise();
+}
+
+function saisirRemiseGlobale() {
+    const val = prompt('Remise globale (%) :', document.getElementById('inp-remise-globale').value || '0');
+    if (val === null) return;
+    const remise = Math.min(100, Math.max(0, parseFloat(val.replace(',','.')) || 0));
+    document.getElementById('inp-remise-globale').value = remise;
+    document.getElementById('btn-remise-globale').textContent = remise + ' %';
+    if (remise > 0) document.getElementById('btn-remise-globale').style.background = '#fef3c7';
+    else document.getElementById('btn-remise-globale').style.background = '#f1f5f9';
+    renderPanier();
 }
 
 function bloquerScanRemise(event) {
@@ -1226,6 +1254,8 @@ async function validerCommande() {
         if (zoneQty) zoneQty.style.display = 'none';
         const inpRemise = document.getElementById('inp-remise-globale');
         if (inpRemise) inpRemise.value = '0';
+        const btnRemGlob = document.getElementById('btn-remise-globale');
+        if (btnRemGlob) { btnRemGlob.textContent = '0 %'; btnRemGlob.style.background = '#f1f5f9'; }
         const inpDate = document.getElementById('inp-date-livraison');
         if (inpDate) inpDate.value = '';
         const btnType = document.getElementById('btn-cmd');
@@ -2749,6 +2779,24 @@ function toast(msg, type) {
 // DÉMARRAGE
 // ============================================================
 init().catch(e => console.error('Init error:', e));
+
+// Enregistrer le Service Worker pour PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+            // Vérifier les mises à jour
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'activated') {
+                        toast('✅ Application mise à jour !', 'success');
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                });
+            });
+        })
+        .catch(e => console.log('SW:', e));
+}
 </script>
 <!-- HTML5-QRCODE READER -->
 <div id="html5qr-reader" style="display:none;position:fixed;inset:0;z-index:998;background:#000;"></div>

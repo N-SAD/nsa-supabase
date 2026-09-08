@@ -11,6 +11,7 @@
     { "src": "/api/mobile/([^/]+)", "dest": "/api/data.js?action=mobile&store=$1" },
     { "src": "/mobile", "dest": "/erp-mobile-commande.html" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/", "dest": "/api/data.js?action=ping" }
   ]
 }
