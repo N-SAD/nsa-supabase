@@ -400,17 +400,6 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- PAGE : SYNC -->
     <div class="page" id="pg-sync">
 
-      <div class="card">
-        <div class="card-title">🖥️ Connexion serveur PC</div>
-        <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Même réseau Wi-Fi requis. Lancez d'abord le serveur sur le PC.</p>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input type="text" id="inp-ip" placeholder="IP du PC (ex: 192.168.1.42)" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;" inputmode="decimal">
-          <button onclick="connecterServeur()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;">🔌</button>
-        </div>
-        <button onclick="detecterServeur()" style="width:100%;background:#7c3aed;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔍 Détection automatique</button>
-        <div id="serveur-status" style="font-size:12px;text-align:center;min-height:18px;"></div>
-      </div>
-
       <!-- CONNEXION RENDER -->
       <div class="card" id="card-render">
         <div class="card-title">☁️ Serveur NSA</div>
@@ -435,7 +424,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button onclick="syncDepuisServeur('articles')" style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;">📦 Charger articles</button>
           <button onclick="syncDepuisServeur('clients')" style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;">👥 Charger clients</button>
           <button onclick="envoyerToutesCommandesServeur()" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;">📤 Envoyer commandes</button>
-          <button onclick="exporterCommandes()" style="background:#f8fafc;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:12px;font-weight:700;cursor:pointer;">💾 Export JSON local</button>
+
         </div>
         <div id="sync-result" style="margin-top:10px;font-size:12px;text-align:center;"></div>
       </div>
