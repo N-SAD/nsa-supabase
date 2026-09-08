@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>NSA — Prise de commande</title>
+<style>
+:root {
+    --primary: #1e3a5f;
+    --primary-light: #2563eb;
+    --accent: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1a2332;
+    --text-2: #64748b;
+    --border: #e2e8f0;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(30,58,95,0.10);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html,body { height:100%; background:var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:var(--text); }
+
+/* LAYOUT */
+.app { display:flex; flex-direction:column; height:100vh; max-width:480px; margin:0 auto; }
+.topbar { background:var(--primary); color:white; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.topbar h1 { font-size:15px; font-weight:700; letter-spacing:.3px; }
+.topbar .logo { font-size:11px; opacity:.7; }
+.content { flex:1; overflow-y:auto; padding:12px; }
+.bottombar { background:var(--card); border-top:1.5px solid var(--border); padding:10px 12px; flex-shrink:0; }
+
+/* CARDS */
+.card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; margin-bottom:10px; }
+.card-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+
+/* FORMULAIRE */
+.field { margin-bottom:10px; }
+.field label { font-size:11px; font-weight:600; color:var(--text-2); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+.field select, .field input { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; color:var(--text); background:white; appearance:none; -webkit-appearance:none; outline:none; }
+.field select:focus, .field input:focus { border-color:var(--primary-light); }
+
+/* SCAN */
+.scan-zone { background:var(--primary); border-radius:14px; padding:14px; color:white; margin-bottom:10px; }
+.scan-row { display:flex; gap:8px; }
+.scan-input { flex:1; padding:12px 14px; border-radius:10px; border:none; font-size:15px; background:white; color:var(--text); outline:none; }
+.btn-scan { background:var(--accent); color:white; border:none; border-radius:10px; padding:12px 16px; font-size:20px; cursor:pointer; flex-shrink:0; }
+.btn-scan:active { opacity:.8; transform:scale(.97); }
+.scan-hint { font-size:11px; opacity:.6; margin-top:6px; text-align:center; }
+
+/* ARTICLE TROUVÉ */
+.article-found { border-radius:12px; border:2px solid var(--success); padding:10px 12px; background:#f0fdf4; display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.article-found img { width:48px; height:48px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+.article-found .art-icon { width:48px; height:48px; border-radius:8px; background:#d1fae5; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.article-found .art-info { flex:1; min-width:0; }
+.article-found .art-ref { font-size:10px; font-weight:700; color:var(--text-2); }
+.article-found .art-name { font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.article-found .art-price { font-size:12px; color:var(--primary-light); font-weight:700; }
+.not-found { background:#fef2f2; border:2px solid #fca5a5; border-radius:12px; padding:10px 14px; color:#991b1b; font-size:13px; margin-bottom:8px; }
+
+/* QTÉ STEPPER */
+.qty-row { display:flex; align-items:center; gap:0; background:#f1f5f9; border-radius:10px; overflow:hidden; margin-bottom:10px; }
+.qty-btn { background:var(--primary); color:white; border:none; width:48px; height:48px; font-size:22px; cursor:pointer; flex-shrink:0; }
+.qty-btn:active { opacity:.8; }
+.qty-val { flex:1; text-align:center; font-size:22px; font-weight:700; color:var(--text); background:transparent; border:none; outline:none; }
+
+/* TYPE DOC */
+.type-btns { display:flex; gap:8px; margin-bottom:10px; }
+.type-btn { flex:1; padding:12px 8px; border-radius:10px; border:2px solid var(--border); background:white; font-size:12px; font-weight:600; cursor:pointer; color:var(--text-2); text-align:center; transition:all .15s; }
+.type-btn.active { border-color:var(--primary-light); background:var(--primary-light); color:white; }
+
+/* LIGNES PANIER */
+.panier-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.panier-count { background:var(--primary-light); color:white; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; }
+.ligne { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--border); }
+.ligne:last-child { border-bottom:none; }
+.ligne .l-ref { font-size:10px; color:var(--text-2); font-weight:700; }
+.ligne .l-name { font-size:12px; font-weight:600; flex:1; min-width:0; }
+.ligne .l-qty { font-size:13px; font-weight:700; color:var(--primary-light); white-space:nowrap; }
+.ligne .l-prix { font-size:11px; color:var(--text-2); white-space:nowrap; }
+.ligne .l-del { background:none; border:none; font-size:16px; color:#ef4444; cursor:pointer; padding:4px; }
+.total-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 0 4px; border-top:2px solid var(--border); margin-top:6px; }
+.total-bar .t-label { font-size:12px; color:var(--text-2); font-weight:600; }
+.total-bar .t-val { font-size:18px; font-weight:900; color:var(--primary); }
+
+/* BOUTONS ACTIONS */
+.btn { border:none; border-radius:10px; padding:14px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; }
+.btn-full { width:100%; }
+.btn-primary { background:var(--primary-light); color:white; }
+.btn-success { background:var(--success); color:white; }
+.btn-danger { background:var(--danger); color:white; }
+.btn-ghost { background:var(--bg); color:var(--text); border:1.5px solid var(--border); }
+.btn:active { opacity:.85; transform:scale(.98); }
+
+/* BOTTOM ACTIONS */
+.bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+/* VIDEO SCAN */
+#scanner-overlay { display:none; position:fixed; inset:0; background:#000; z-index:999; flex-direction:column; align-items:center; justify-content:center; }
+#scanner-overlay.active { display:flex; }
+#scanner-video { width:100%; max-width:480px; border-radius:12px; }
+.scan-frame { position:absolute; width:220px; height:220px; border:3px solid var(--accent); border-radius:16px; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
+.scan-close { position:absolute; top:20px; right:20px; background:white; border:none; border-radius:50%; width:42px; height:42px; font-size:20px; cursor:pointer; }
+.scan-status { color:white; font-size:13px; margin-top:16px; }
+
+/* VUES */
+.page { display:none; }
+.page.active { display:block; }
+
+/* IMPORT/EXPORT */
+.sync-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sync-card { background:var(--bg); border-radius:12px; padding:14px; text-align:center; cursor:pointer; border:1.5px solid var(--border); }
+.sync-card:active { opacity:.8; }
+.sync-card .s-icon { font-size:28px; margin-bottom:6px; }
+.sync-card .s-label { font-size:12px; font-weight:600; color:var(--text-2); }
+
+/* NAV */
+.nav { display:flex; background:white; border-top:1px solid var(--border); }
+.nav-btn { flex:1; padding:8px 4px; border:none; background:none; font-size:10px; font-weight:600; color:var(--text-2); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.nav-btn .nav-icon { font-size:20px; }
+.nav-btn.active { color:var(--primary-light); }
+
+/* TOAST */
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px); background:#1e293b; color:white; padding:10px 20px; border-radius:10px; font-size:13px; z-index:9999; opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar" id="topbar-main" style="background:#1e3a5f;">
+    <div>
+      <div class="logo">N.S.A. Développement</div>
+      <h1 id="page-title" style="font-size:15px;">Accueil</h1>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;opacity:.7;" id="topbar-user">nsadev</div>
+      <div style="font-size:11px;opacity:.7;" id="topbar-date"></div>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+
+    <!-- PAGE : ACCUEIL -->
+    <div class="page active" id="pg-accueil">
+      <div style="background:#1e3a5f;padding:16px;text-align:center;margin-bottom:4px;">
+        <div style="font-size:22px;font-weight:900;color:white;letter-spacing:1px;">NO AGE</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);">Beach &amp; Casual Wear</div>
+      </div>
+      <div style="padding:16px;">
+        <!-- Ligne 1 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="home-icon" onclick="goPage('devis')">
+            <div class="home-icon-img">📝</div>
+            <div class="home-icon-label">Créer un devis</div>
+          </div>
+          <div class="home-icon" onclick="goPage('commande')">
+            <div class="home-icon-img">🛒</div>
+            <div class="home-icon-label">Prise de commande</div>
+          </div>
+          <div class="home-icon" onclick="goPage('historique')">
+            <div class="home-icon-img">📜</div>
+            <div class="home-icon-label">Historique commandes</div>
+          </div>
+        </div>
+        <!-- Ligne 2 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div class="home-icon" onclick="goPage('articles')">
+            <div class="home-icon-img">📦</div>
+            <div class="home-icon-label">Liste articles</div>
+          </div>
+          <div class="home-icon" onclick="goPage('clients-list')">
+            <div class="home-icon-img">👥</div>
+            <div class="home-icon-label">Liste clients</div>
+          </div>
+          <div class="home-icon" onclick="goPage('modeles')">
+            <div class="home-icon-img">📋</div>
+            <div class="home-icon-label">Modèles de commande</div>
+          </div>
+        </div>
+        <!-- Statut serveur -->
+        <div id="home-server-status" style="background:#f8fafc;border-radius:12px;padding:12px;text-align:center;font-size:12px;color:var(--text-2);">
+          ☁️ Non connecté au serveur
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE : COMMANDE -->
+    <div class="page" id="pg-commande">
+
+      <!-- Client + Type doc -->
+      <div class="card">
+        <div class="card-title">📋 Document</div>
+        <div class="type-btns">
+          <button class="type-btn active" id="btn-cmd" onclick="setTypeDoc('commande')">🛒 Commande</button>
+          <button class="type-btn" id="btn-bl" onclick="setTypeDoc('bl')">📦 Bon livraison</button>
+        </div>
+        <div class="field">
+          <label>Client *</label>
+          <div style="display:flex;gap:8px;">
+            <select id="sel-client" style="flex:1;"><option value="">-- Sélectionner --</option></select>
+            <button onclick="ouvrirNouveauClient()" style="background:var(--primary-light);color:white;border:none;border-radius:10px;padding:0 14px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Nouveau client">➕</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Référence / Remarque</label>
+          <input type="text" id="inp-ref" placeholder="Réf commande client...">
+        </div>
+        <div class="field">
+          <label>Date de livraison souhaitée</label>
+          <input type="date" id="inp-date-livraison" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);">
+        </div>
+      </div>
+
+      <!-- SCAN -->
+      <div class="scan-zone">
+        <div class="card-title" style="color:white;margin-bottom:10px;">🔍 Ajouter un article</div>
+
+        <!-- Champ principal - optimisé scannette Bluetooth ET saisie manuelle -->
+        <div style="position:relative;">
+          <input class="scan-input" type="text" id="inp-ean"
+            placeholder="Scannette ou référence..."
+            inputmode="text"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            style="width:100%;padding:14px 50px 14px 16px;border-radius:12px;font-size:16px;border:none;"
+            onkeydown="onEanKeydown(event)"
+            oninput="onEanInput(this)">
+          <button onclick="rechercherArticle()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#059669;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:18px;cursor:pointer;">➕</button>
+        </div>
+
+        <!-- Boutons rapides -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <label style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,0.15);color:white;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+            📷 Photo
+            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="analyserPhotoBarcode(this)">
+          </label>
+          <button onclick="focusScan()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+            🔌 Scannette
+          </button>
+        </div>
+        <div class="scan-hint" style="margin-top:6px;">Scannette Bluetooth → champ actif automatiquement</div>
+      </div>
+
+      <!-- Article trouvé -->
+      <div id="zone-article"></div>
+
+      <!-- Quantité + remise ligne -->
+      <div id="zone-qty" style="display:none;">
+        <div class="card-title">Quantité & remise</div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <input class="qty-val" type="number" id="inp-qty" value="1" min="1">
+          <button class="qty-btn" onclick="changeQty(1)">＋</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
+          <input type="text" inputmode="decimal" id="inp-remise-ligne" value="0" placeholder="0" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="mettreAJourPrixRemise()" onclick="this.select()">
+          <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
+        </div>
+        <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
+      </div>
+
+      <!-- Panier -->
+      <div class="card" id="card-panier" style="display:none;">
+        <div class="panier-header">
+          <div class="card-title" style="margin-bottom:0;">🛒 Panier</div>
+          <span class="panier-count" id="panier-count">0</span>
+        </div>
+        <div id="panier-lignes"></div>
+        <!-- Remise globale -->
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:6px;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
+          <input type="text" inputmode="decimal" id="inp-remise-globale" value="0" placeholder="0" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="renderPanier()" onclick="this.select()">
+          <span id="total-remise" style="font-size:12px;color:var(--danger);margin-left:auto;"></span>
+        </div>
+        <div class="total-bar">
+          <span class="t-label">Total HT</span>
+          <span class="t-val" id="total-ht">0,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);padding:4px 0;">
+          <span>TVA 20%</span><span id="total-tva">0,00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;color:var(--primary);padding:4px 0;">
+          <span>Total TTC</span><span id="total-ttc">0,00 €</span>
+        </div>
+      </div>
+
+    </div><!-- /pg-commande -->
+
+    <!-- PAGE : HISTORIQUE -->
+    <div class="page" id="pg-historique">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;">
+        <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
+        <div style="font-size:14px;font-weight:700;color:var(--primary);">📜 Historique</div>
+        <div style="width:80px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 Documents créés</div>
+        <div id="liste-docs"></div>
+      </div>
+    </div>
+
+    <!-- PAGE : ARTICLES -->
+    <div class="page" id="pg-articles">
+      <div class="card">
+        <div class="card-title">📦 Articles</div>
+        <input type="text" id="search-articles" placeholder="🔍 Rechercher..." oninput="filtrerArticlesMobile()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;">
+        <div id="liste-articles-mobile" style="font-size:13px;"></div>
+      </div>
+    </div>
+
+    <!-- PAGE : CLIENTS LIST -->
+    <div class="page" id="pg-clients-list">
+      <div class="card">
+        <div class="card-title">👥 Clients</div>
+        <input type="text" id="search-clients-list" placeholder="🔍 Rechercher..." oninput="filtrerClientsMobile()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;">
+        <div id="liste-clients-mobile" style="font-size:13px;"></div>
+      </div>
+    </div>
+
+    <!-- PAGE : DEVIS -->
+    <div class="page" id="pg-devis">
+      <div class="card">
+        <div class="card-title">📝 Nouveau devis</div>
+        <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Un devis peut être transféré en commande depuis l'historique.</p>
+        <div class="field">
+          <label>Client *</label>
+          <div style="display:flex;gap:8px;">
+            <select id="sel-client-devis" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;appearance:none;"><option value="">-- Sélectionner --</option></select>
+            <button onclick="ouvrirNouveauClient()" style="background:var(--primary-light);color:white;border:none;border-radius:10px;padding:0 14px;font-size:18px;cursor:pointer;">➕</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Référence / Remarque</label>
+          <input type="text" id="inp-ref-devis" placeholder="Réf devis...">
+        </div>
+      </div>
+
+      <!-- Zone scan devis -->
+      <div class="scan-zone">
+        <div class="card-title" style="color:white;margin-bottom:10px;">🔍 Ajouter un article</div>
+        <div class="scan-row">
+          <input class="scan-input" type="text" id="inp-ean-devis" placeholder="EAN13 ou référence..." inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key==='Enter')rechercherArticleDevis()">
+          <button onclick="rechercherArticleDevis()" style="background:#059669;color:white;border:none;border-radius:10px;padding:12px 16px;font-size:20px;cursor:pointer;flex-shrink:0;">➕</button>
+        </div>
+      </div>
+
+      <div id="zone-article-devis"></div>
+      <div id="zone-qty-devis" style="display:none;">
+        <div class="card-title">Quantité</div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="changeQtyDevis(-1)">−</button>
+          <input class="qty-val" type="number" id="inp-qty-devis" value="1" min="1">
+          <button class="qty-btn" onclick="changeQtyDevis(1)">＋</button>
+        </div>
+        <button class="btn btn-success btn-full" onclick="ajouterAuPanierDevis()">✅ Ajouter</button>
+      </div>
+
+      <!-- Panier devis -->
+      <div class="card" id="card-panier-devis" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="card-title" style="margin-bottom:0;">📝 Lignes devis</div>
+          <span id="panier-devis-count" style="background:var(--primary-light);color:white;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">0</span>
+        </div>
+        <div id="panier-devis-lignes"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid var(--border);margin-top:6px;">
+          <span style="font-weight:700;font-size:14px;">Total HT</span>
+          <span style="font-weight:900;font-size:18px;color:var(--primary);" id="total-ht-devis">0,00 €</span>
+        </div>
+        <button onclick="validerDevis()" class="btn btn-full" style="background:var(--primary);color:white;margin-top:10px;">📝 Valider le devis</button>
+      </div>
+    </div>
+
+    <!-- PAGE : MODELES -->
+    <div class="page" id="pg-modeles">
+      <div class="card">
+        <div class="card-title">📋 Modèles de commande</div>
+        <div id="liste-modeles" style="font-size:13px;"></div>
+        <div style="margin-top:12px;">
+          <button onclick="sauvegarderModele()" style="width:100%;background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:#065f46;cursor:pointer;">💾 Sauvegarder panier actuel comme modèle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE : SYNC -->
+    <div class="page" id="pg-sync">
+
+      <div class="card">
+        <div class="card-title">🖥️ Connexion serveur PC</div>
+        <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Même réseau Wi-Fi requis. Lancez d'abord le serveur sur le PC.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input type="text" id="inp-ip" placeholder="IP du PC (ex: 192.168.1.42)" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;" inputmode="decimal">
+          <button onclick="connecterServeur()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;">🔌</button>
+        </div>
+        <button onclick="detecterServeur()" style="width:100%;background:#7c3aed;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔍 Détection automatique</button>
+        <div id="serveur-status" style="font-size:12px;text-align:center;min-height:18px;"></div>
+      </div>
+
+      <!-- CONNEXION RENDER -->
+      <div class="card" id="card-render">
+        <div class="card-title">☁️ Serveur NSA</div>
+        <div id="render-status" style="text-align:center;font-size:13px;margin-bottom:10px;padding:8px;border-radius:8px;background:#f8fafc;">Non connecté</div>
+        <div id="zone-login-render">
+          <div class="field" style="margin-bottom:8px;">
+            <label>Mot de passe serveur</label>
+            <input type="password" id="inp-pwd-render" placeholder="NSA2026" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;">
+          </div>
+          <button onclick="connecterRender()" class="btn btn-full" style="background:var(--primary);color:white;">🔌 Se connecter</button>
+        </div>
+        <div id="render-stats" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;" id="render-stats-grid"></div>
+          <button onclick="deconnecterRender()" style="width:100%;margin-top:8px;background:#f1f5f9;border:1px solid var(--border);border-radius:10px;padding:8px;font-size:12px;cursor:pointer;">Déconnecter</button>
+        </div>
+      </div>
+
+      <!-- ACTIONS SERVEUR -->
+      <div class="card" id="card-actions-render" style="display:none;">
+        <div class="card-title">🔄 Synchronisation</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="syncDepuisServeur('articles')" style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;">📦 Charger articles</button>
+          <button onclick="syncDepuisServeur('clients')" style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;">👥 Charger clients</button>
+          <button onclick="envoyerToutesCommandesServeur()" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;">📤 Envoyer commandes</button>
+          <button onclick="exporterCommandes()" style="background:#f8fafc;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:12px;font-weight:700;cursor:pointer;">💾 Export JSON local</button>
+        </div>
+        <div id="sync-result" style="margin-top:10px;font-size:12px;text-align:center;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ℹ️ Base locale</div>
+        <div id="stats-info" style="font-size:13px;line-height:2;"></div>
+        <div style="margin-top:8px;">
+          <button onclick="viderBase()" style="width:100%;background:#fef2f2;color:#ef4444;border:1.5px solid #fca5a5;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;">🗑️ Vider la base</button>
+        </div>
+      </div>
+
+      <input type="file" id="file-import" accept=".json" style="display:none" onchange="traiterImport(this)">
+      <div id="sync-info" style="font-size:12px;color:var(--text-2);text-align:center;padding:8px;"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- NAV BAS -->
+  <nav class="nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-accueil" onclick="goPage('accueil')">
+      <span class="nav-icon">🏠</span>Accueil
+    </button>
+    <button class="nav-btn" id="nav-commande" onclick="goPage('commande')">
+      <span class="nav-icon">🛒</span>Commande
+    </button>
+    <button class="nav-btn" id="nav-historique" onclick="goPage('historique')">
+      <span class="nav-icon">📜</span>Historique
+    </button>
+    <button class="nav-btn" id="nav-sync" onclick="goPage('sync')">
+      <span class="nav-icon">🔄</span>Synchro
+    </button>
+  </nav>
+
+  <!-- BOTTOM ACTION -->
+  <div class="bottombar" id="bottom-action" style="display:none;">
+    <div class="bottom-grid">
+      <button class="btn btn-ghost" onclick="viderPanier()">🗑️ Vider</button>
+      <button class="btn btn-primary" onclick="validerCommande()">✅ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISUALISATION/MODIFICATION DOCUMENT -->
+<div id="modal-doc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;">
+  <div style="background:white;border-radius:16px 16px 0 0;width:100%;max-width:480px;margin:60px auto 0;padding:20px;min-height:calc(100vh - 60px);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:sticky;top:0;background:white;padding-bottom:10px;border-bottom:1px solid var(--border);">
+      <div style="font-size:15px;font-weight:700;color:var(--primary);" id="modal-doc-titre">Document</div>
+      <button onclick="fermerModalDoc()" style="background:#f1f5f9;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- Infos -->
+    <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;" id="modal-doc-infos"></div>
+
+    <!-- Champs modifiables -->
+    <div style="margin-bottom:10px;">
+      <div style="margin-bottom:6px;">
+        <label style="font-size:11px;font-weight:700;color:var(--text-2);display:block;margin-bottom:3px;">N° DE COMMANDE CLIENT</label>
+        <input type="text" id="doc-num-commande-client" placeholder="N° commande client..." autocomplete="off" autocorrect="off" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;">
+      </div>
+      <div style="margin-bottom:6px;">
+        <label style="font-size:11px;font-weight:700;color:var(--text-2);display:block;margin-bottom:3px;">OBSERVATION</label>
+        <textarea id="doc-observation" placeholder="Observation..." rows="2" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;resize:none;font-family:inherit;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text-2);display:block;margin-bottom:3px;">DATE DE LIVRAISON SOUHAITÉE</label>
+        <input type="date" id="doc-date-livraison" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);">
+      </div>
+    </div>
+
+    <!-- Ajouter un article -->
+    <div style="background:#eff6ff;border-radius:10px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;">➕ Ajouter un article</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="doc-add-ean" placeholder="Référence ou EAN13..." style="flex:1;padding:10px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:13px;" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key==='Enter')ajouterArticleDoc()">
+        <button onclick="ajouterArticleDoc()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:16px;cursor:pointer;">➕</button>
+      </div>
+      <div id="doc-add-result" style="font-size:12px;color:#1e40af;margin-top:6px;min-height:16px;"></div>
+      <!-- Quantité pour ajout -->
+      <div id="doc-add-qty-zone" style="display:none;margin-top:8px;">
+        <div style="font-size:12px;color:#1e3a5f;margin-bottom:6px;" id="doc-add-art-name"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="changeDocAddQty(-1)" style="background:#1e3a5f;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:20px;cursor:pointer;">−</button>
+          <input type="number" id="doc-add-qty" value="1" min="1" style="flex:1;text-align:center;padding:8px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:18px;font-weight:700;">
+          <button onclick="changeDocAddQty(1)" style="background:#1e3a5f;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:20px;cursor:pointer;">+</button>
+          <button onclick="confirmerAjoutArticleDoc()" style="background:#10b981;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">✅ Ajouter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes -->
+    <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:var(--primary);margin-bottom:8px;">Articles de la commande</div>
+    <div id="modal-doc-lignes"></div>
+
+    <!-- Remise globale -->
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:8px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
+      <input type="text" inputmode="decimal" id="doc-remise-globale" placeholder="0" onclick="this.select()" oninput="rafraichirLignesDoc()" style="width:60px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;">
+      <span id="modal-doc-remise-affichage" style="font-size:12px;color:#ef4444;font-weight:700;margin-left:auto;"></span>
+    </div>
+    <!-- Total -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:2px solid var(--border);margin-top:4px;">
+      <span style="font-weight:700;font-size:14px;">Total HT</span>
+      <span style="font-weight:900;font-size:18px;color:var(--primary);" id="modal-doc-total"></span>
+    </div>
+
+    <!-- Actions -->
+    <div id="modal-doc-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-bottom:8px;">
+      <button onclick="sauvegarderModifDoc()" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:#1e40af;cursor:pointer;">💾 Sauvegarder</button>
+      <button onclick="envoyerDocumentServeur()" style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:#065f46;cursor:pointer;">☁️ Serveur</button>
+    </div>
+    <button onclick="envoyerEmailClient()" style="width:100%;background:#2563eb;color:white;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">📧 Envoyer par email au client</button>
+    <!-- Bouton transfert devis → commande (visible seulement pour les devis) -->
+    <div id="modal-doc-transfert" style="display:none;padding-bottom:20px;">
+      <button id="btn-transfert-cmd" onclick="" style="width:100%;background:#f59e0b;color:white;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">🔀 Transférer en commande</button>
+    </div>
+    <div id="modal-doc-msg" style="font-size:12px;text-align:center;min-height:20px;color:var(--text-2);"></div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER CLIENT -->
+<div id="modal-modif-client" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;color:var(--primary);">✏️ Modifier le client</div>
+      <button onclick="fermerModifClient()" style="background:#f1f5f9;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <input type="hidden" id="mc-id">
+    <div class="field"><label>Code client</label><input type="text" id="mc-code" style="text-transform:uppercase;"></div>
+    <div class="field"><label>Raison sociale *</label><input type="text" id="mc-nom" placeholder="Nom de la société..."></div>
+    <div class="field"><label>Contact</label><input type="text" id="mc-contact" placeholder="Nom du contact..."></div>
+    <div class="field"><label>Adresse</label><input type="text" id="mc-adresse" placeholder="Adresse..."></div>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;">
+      <div class="field"><label>Code postal</label><input type="text" id="mc-cp" inputmode="numeric"></div>
+      <div class="field"><label>Ville</label><input type="text" id="mc-ville"></div>
+    </div>
+    <div class="field"><label>Téléphone</label><input type="tel" id="mc-tel" inputmode="tel"></div>
+    <div class="field"><label>Email</label><input type="email" id="mc-email"></div>
+    <div class="field"><label>Conditions de paiement</label>
+      <select id="mc-conditions">
+        <option value="">-- Choisir --</option>
+        <option>Comptant</option>
+        <option>30 jours</option>
+        <option>45 jours</option>
+        <option>60 jours</option>
+        <option>60 jours fin de mois</option>
+        <option>VIRT CM-CIC FACTOR 30 JOURS</option>
+        <option>VIRT CM-CIC FACTOR 60 JOURS</option>
+      </select>
+    </div>
+    <div class="field"><label>Famille client</label><input type="text" id="mc-famille"></div>
+    <div class="field"><label>N° TVA intracommunautaire</label><input type="text" id="mc-tva"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button onclick="fermerModifClient()" style="background:#f1f5f9;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button onclick="sauvegarderModifClient()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU CLIENT -->
+<div id="modal-client" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;color:var(--primary);">➕ Nouveau client</div>
+      <button onclick="fermerNouveauClient()" style="background:#f1f5f9;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <div class="field"><label>Code client *</label><input type="text" id="nc-code" placeholder="ex: M13008" style="text-transform:uppercase;"></div>
+    <div class="field"><label>Raison sociale *</label><input type="text" id="nc-nom" placeholder="Nom de la société..."></div>
+    <div class="field"><label>Contact</label><input type="text" id="nc-contact" placeholder="Nom du contact..."></div>
+    <div class="field"><label>Adresse</label><input type="text" id="nc-adresse" placeholder="Adresse..."></div>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;">
+      <div class="field"><label>Code postal</label><input type="text" id="nc-cp" placeholder="13008" inputmode="numeric"></div>
+      <div class="field"><label>Ville</label><input type="text" id="nc-ville" placeholder="Marseille"></div>
+    </div>
+    <div class="field"><label>Téléphone</label><input type="tel" id="nc-tel" placeholder="0496199002" inputmode="tel"></div>
+    <div class="field"><label>Email</label><input type="email" id="nc-email" placeholder="contact@société.fr"></div>
+    <div class="field"><label>Conditions de paiement</label>
+      <select id="nc-conditions">
+        <option value="">-- Choisir --</option>
+        <option>Comptant</option>
+        <option>30 jours</option>
+        <option>45 jours</option>
+        <option>60 jours</option>
+        <option>60 jours fin de mois</option>
+        <option>VIRT CM-CIC FACTOR 30 JOURS</option>
+        <option>VIRT CM-CIC FACTOR 60 JOURS</option>
+      </select>
+    </div>
+    <div class="field"><label>Famille client</label><input type="text" id="nc-famille" placeholder="GMS, Pharmacie..."></div>
+    <div class="field"><label>N° TVA intracommunautaire</label><input type="text" id="nc-tva" placeholder="FR34326684917"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button onclick="fermerNouveauClient()" style="background:#f1f5f9;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button onclick="sauvegarderNouveauClient()" style="background:var(--success);color:white;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">✅ Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCANNER OVERLAY -->
+<div id="scanner-overlay">
+  <video id="scanner-video" autoplay playsinline muted></video>
+  <div class="scan-frame"></div>
+  <div class="scan-status" id="scan-status">Pointez la caméra sur le code EAN13</div>
+  <button class="scan-close" onclick="fermerScanner()">✕</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast-msg"></div>
+
+<script>
+// ============================================================
+// BASE DE DONNÉES (localStorage - simple et universel)
+// ============================================================
+const DB_PREFIX = 'nsa_';
+
+function ouvrirDB() {
+    // localStorage ne nécessite pas d'initialisation
+    return Promise.resolve(true);
+}
+
+function dbAll(store) {
+    try {
+        const data = localStorage.getItem(DB_PREFIX + store);
+        return Promise.resolve(data ? JSON.parse(data) : []);
+    } catch(e) {
+        return Promise.resolve([]);
+    }
+}
+
+function dbAdd(store, data) {
+    try {
+        if (!data || typeof data !== 'object') return Promise.reject(new Error('données invalides'));
+        const items = JSON.parse(localStorage.getItem(DB_PREFIX + store) || '[]');
+        if (!data.id) data.id = Date.now() + Math.floor(Math.random() * 1000);
+        const idx = items.findIndex(x => x.id === data.id);
+        if (idx >= 0) items[idx] = data;
+        else items.push(data);
+        // Sauvegarder avec gestion quota
+        try {
+            localStorage.setItem(DB_PREFIX + store, JSON.stringify(items));
+        } catch(quota) {
+            // Quota dépassé : sauvegarder sans les champs optionnels
+            const slim = items.map(it => {
+                const s = {};
+                ['id','reference','nom','code','designation','descriptionCourte','codeBarres','prixVente','prixAchat','stock','categorie','ville','telephone','conditionsPaiement'].forEach(k => {
+                    if (it[k] !== undefined && it[k] !== null) s[k] = it[k];
+                });
+                return s;
+            });
+            localStorage.setItem(DB_PREFIX + store, JSON.stringify(slim));
+        }
+        return Promise.resolve(data.id);
+    } catch(e) {
+        return Promise.reject(e);
+    }
+}
+
+// Sauvegarde groupée (plus efficace que article par article)
+function dbSaveAll(store, items) {
+    try {
+        localStorage.setItem(DB_PREFIX + store, JSON.stringify(items));
+        return true;
+    } catch(e) {
+        console.warn('localStorage quota:', e.message);
+        return false;
+    }
+}
+
+function dbClear(store) {
+    try {
+        localStorage.removeItem(DB_PREFIX + store);
+        return Promise.resolve();
+    } catch(e) {
+        return Promise.reject(e);
+    }
+}
+
+// ============================================================
+// ÉTAT APPLICATION
+// ============================================================
+let typeDoc = 'commande';
+let panier = [];
+let articleCourant = null;
+let articles = [];
+let clients = [];
+let serveurToken = localStorage.getItem('nsa_token') || null;
+const SERVEUR_URL = 'https://erp-1-1v48.onrender.com';
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+    await ouvrirDB();
+    articles = await dbAll('articles');
+    clients = await dbAll('clients');
+    remplirSelectClients();
+    await chargerStats();
+}
+
+function remplirSelectClients() {
+    const sel = document.getElementById('sel-client');
+    sel.innerHTML = '<option value="">-- Sélectionner un client --</option>';
+    clients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = (c.code ? c.code + ' — ' : '') + (c.nom || 'Client ' + c.id);
+        sel.appendChild(opt);
+    });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    const page = document.getElementById('pg-' + name);
+    if (page) page.classList.add('active');
+
+    const navBtn = document.getElementById('nav-' + name);
+    if (navBtn) navBtn.classList.add('active');
+    else {
+        // Pages sans nav propre → activer nav accueil
+        const navAccueil = document.getElementById('nav-accueil');
+        if (navAccueil) navAccueil.classList.add('active');
+    }
+
+    const titles = {
+        accueil: 'Accueil', commande: 'Prise de commande',
+        historique: 'Historique', sync: 'Synchronisation',
+        articles: 'Articles', 'clients-list': 'Clients',
+        devis: 'Devis', modeles: 'Modèles de commande'
+    };
+    document.getElementById('page-title').textContent = titles[name] || name;
+
+    // Bouton retour sur pages secondaires
+    const topbar = document.getElementById('topbar-main');
+    const pagesSecondaires = ['articles','clients-list','devis','modeles','commande'];
+
+    if (name === 'historique') chargerHistorique();
+    if (name === 'commande') {
+        setTimeout(() => {
+            const inp = document.getElementById('inp-ean');
+            if (inp) inp.focus();
+        }, 300);
+    }
+    if (name === 'sync') chargerStats();
+    if (name === 'articles') chargerArticlesMobile();
+    if (name === 'clients-list') chargerClientsMobile();
+    if (name === 'modeles') chargerModeles();
+    if (name === 'devis') initDevis();
+
+    // Date dans topbar
+    const dateEl = document.getElementById('topbar-date');
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString('fr-FR');
+}
+
+async function chargerArticlesMobile() {
+    const el = document.getElementById('liste-articles-mobile');
+    if (!el) return;
+    el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">⏳ Chargement...</p>';
+    const arts = await dbAll('articles');
+    if (arts.length === 0) {
+        el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">Aucun article — synchronisez depuis le serveur</p>';
+        return;
+    }
+    el.innerHTML = arts.map(a => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:13px;font-weight:700;">' + (a.reference||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--text-2);">' + (a.designation||a.descriptionCourte||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--primary-light);font-weight:700;">' + (parseFloat(a.prixVente)||0).toFixed(2).replace('.',',') + ' € HT</div>'
+        + '</div>'
+        + '<div style="font-size:11px;text-align:right;">'
+        + '<div style="background:#f0fdf4;color:#065f46;border-radius:6px;padding:2px 8px;font-weight:700;">Stock: ' + (a.stock||0) + '</div>'
+        + '</div></div>'
+    ).join('');
+    // Stocker pour filtrage
+    el.dataset.all = JSON.stringify(arts);
+}
+
+function filtrerArticlesMobile() {
+    const q = document.getElementById('search-articles').value.toLowerCase();
+    const el = document.getElementById('liste-articles-mobile');
+    if (!el.dataset.all) return;
+    const arts = JSON.parse(el.dataset.all);
+    const filtered = arts.filter(a =>
+        (a.reference||'').toLowerCase().includes(q) ||
+        (a.designation||'').toLowerCase().includes(q) ||
+        (a.descriptionCourte||'').toLowerCase().includes(q) ||
+        (a.codeBarres||'').includes(q)
+    );
+    el.innerHTML = filtered.map(a => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:13px;font-weight:700;">' + (a.reference||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--text-2);">' + (a.designation||a.descriptionCourte||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--primary-light);font-weight:700;">' + (parseFloat(a.prixVente)||0).toFixed(2).replace('.',',') + ' € HT</div>'
+        + '</div>'
+        + '<div style="font-size:11px;">'
+        + '<div style="background:#f0fdf4;color:#065f46;border-radius:6px;padding:2px 8px;font-weight:700;">Stock: ' + (a.stock||0) + '</div>'
+        + '</div></div>'
+    ).join('');
+}
+
+async function chargerClientsMobile() {
+    const el = document.getElementById('liste-clients-mobile');
+    if (!el) return;
+    el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">⏳ Chargement...</p>';
+    const cls = await dbAll('clients');
+    if (cls.length === 0) {
+        el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">Aucun client — synchronisez depuis le serveur</p>';
+        return;
+    }
+    el.innerHTML = cls.map(c => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:13px;font-weight:700;">' + (c.code ? '['+c.code+'] ' : '') + (c.nom||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--text-2);">' + [c.ville, c.telephone].filter(Boolean).join(' · ') + '</div>'
+        + '</div>'
+        + '<button data-id="' + c.id + '" onclick="ouvrirModifClient(parseInt(this.dataset.id))" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;flex-shrink:0;">✏️</button>'
+        + '</div>'
+    ).join('');
+    el.dataset.all = JSON.stringify(cls);
+}
+
+function filtrerClientsMobile() {
+    const q = document.getElementById('search-clients-list').value.toLowerCase();
+    const el = document.getElementById('liste-clients-mobile');
+    if (!el.dataset.all) return;
+    const cls = JSON.parse(el.dataset.all);
+    const filtered = cls.filter(c =>
+        (c.nom||'').toLowerCase().includes(q) ||
+        (c.code||'').toLowerCase().includes(q) ||
+        (c.ville||'').toLowerCase().includes(q)
+    );
+    el.innerHTML = filtered.map(c => '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
+        + '<div style="font-size:13px;font-weight:700;">' + (c.code ? '['+c.code+'] ' : '') + (c.nom||'') + '</div>'
+        + '<div style="font-size:11px;color:var(--text-2);">' + [c.ville, c.telephone].filter(Boolean).join(' · ') + '</div>'
+        + '</div>'
+    ).join('');
+}
+
+async function chargerModeles() {
+    const el = document.getElementById('liste-modeles');
+    if (!el) return;
+    const modeles = JSON.parse(localStorage.getItem('nsa_modeles') || '[]');
+    if (modeles.length === 0) {
+        el.innerHTML = '<p style="color:var(--text-2);font-size:13px;text-align:center;padding:20px;">Aucun modèle sauvegardé.<br>Créez une commande et sauvegardez-la comme modèle.</p>';
+        return;
+    }
+    el.innerHTML = modeles.map((m, i) => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">'
+        + '<div>'
+        + '<div style="font-size:13px;font-weight:700;">📋 ' + (m.nom || 'Modèle ' + (i+1)) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-2);">' + (m.lignes||[]).length + ' article(s)</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;">'
+        + '<button data-idx="' + i + '" onclick="chargerModele(parseInt(this.dataset.idx))" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;">Utiliser</button>'
+        + '<button data-idx="' + i + '" onclick="supprimerModele(parseInt(this.dataset.idx))" style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:6px 12px;font-size:12px;color:#ef4444;cursor:pointer;">🗑️</button>'
+        + '</div></div>'
+    ).join('');
+}
+
+function sauvegarderModele() {
+    if (panier.length === 0) { toast('⚠️ Panier vide', 'warn'); return; }
+    const nom = prompt('Nom du modèle :');
+    if (!nom) return;
+    const modeles = JSON.parse(localStorage.getItem('nsa_modeles') || '[]');
+    modeles.push({ nom, lignes: [...panier], date: new Date().toISOString() });
+    localStorage.setItem('nsa_modeles', JSON.stringify(modeles));
+    toast('✅ Modèle sauvegardé', 'success');
+    chargerModeles();
+}
+
+function chargerModele(idx) {
+    const modeles = JSON.parse(localStorage.getItem('nsa_modeles') || '[]');
+    const m = modeles[idx];
+    if (!m) return;
+    panier = [...m.lignes];
+    renderPanier();
+    goPage('commande');
+    toast('✅ Modèle chargé dans le panier', 'success');
+}
+
+function supprimerModele(idx) {
+    if (!confirm('Supprimer ce modèle ?')) return;
+    const modeles = JSON.parse(localStorage.getItem('nsa_modeles') || '[]');
+    modeles.splice(idx, 1);
+    localStorage.setItem('nsa_modeles', JSON.stringify(modeles));
+    chargerModeles();
+}
+
+function setTypeDoc(type) {
+    typeDoc = type;
+    document.getElementById('btn-cmd').classList.toggle('active', type === 'commande');
+    document.getElementById('btn-bl').classList.toggle('active', type === 'bl');
+}
+
+// ============================================================
+// RECHERCHE ARTICLE
+// ============================================================
+async function rechercherArticle() {
+    const val = document.getElementById('inp-ean').value.trim();
+    if (!val) return;
+    // Recherche exacte puis partielle
+    let art = articles.find(a =>
+        (a.codeBarres && a.codeBarres.toString() === val) ||
+        (a.reference && a.reference.toLowerCase() === val.toLowerCase()) ||
+        (a.ean && a.ean.toString() === val)
+    );
+    // Si pas trouvé → recherche partielle (commence par)
+    if (!art && val.length >= 3) {
+        art = articles.find(a =>
+            (a.reference && a.reference.toLowerCase().startsWith(val.toLowerCase())) ||
+            (a.codeBarres && a.codeBarres.toString().startsWith(val))
+        );
+    }
+    const zone = document.getElementById('zone-article');
+    const zoneQty = document.getElementById('zone-qty');
+    if (art) {
+        articleCourant = art;
+        // PCB : conditionnement de l'article (minimum de commande)
+        const pcb = parseInt(art.conditionnement) || 1;
+        document.getElementById('inp-qty').value = pcb;
+        const photoHTML = art.photo
+            ? '<img src="' + art.photo + '" alt="">'
+            : '<div class="art-icon">📦</div>';
+        zone.innerHTML = '<div class="article-found">'
+            + photoHTML
+            + '<div class="art-info">'
+            + '<div class="art-ref">' + (art.reference || '') + '</div>'
+            + '<div class="art-name">' + (art.designation || art.descriptionCourte || 'Article') + '</div>'
+            + '<div class="art-price">' + (parseFloat(art.prixVente)||0).toFixed(2).replace('.',',') + ' € HT / unité'
+            + ((parseInt(art.conditionnement)||1) > 1 ? ' · PCB: ' + art.conditionnement : '') + '</div>'
+            + '</div></div>';
+        zoneQty.style.display = '';
+        document.getElementById('inp-ean').value = '';
+        toast('✅ ' + (art.reference || 'Article') + ' trouvé', 'success');
+    } else {
+        articleCourant = null;
+        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong></div>';
+        zoneQty.style.display = 'none';
+    }
+}
+
+function changeQty(delta) {
+    const inp = document.getElementById('inp-qty');
+    let v = parseInt(inp.value) + delta;
+    if (v < 1) v = 1;
+    inp.value = v;
+}
+
+// ============================================================
+// PANIER
+// ============================================================
+function ajouterAuPanier() {
+    if (!articleCourant) return;
+    const qty = parseInt(document.getElementById('inp-qty').value) || 1;
+    const remiseLigne = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
+    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const prixApresRemise = prixBase * (1 - remiseLigne / 100);
+    const exist = panier.find(l => l.articleId === articleCourant.id);
+    if (exist) {
+        exist.quantite += qty;
+    } else {
+        panier.push({
+            articleId: articleCourant.id,
+            reference: articleCourant.reference || '',
+            designation: articleCourant.designation || articleCourant.descriptionCourte || '',
+            ean: articleCourant.codeBarres || '',
+            quantite: qty,
+            prixUnitaire: prixBase,
+            prixUnitaireRemise: prixApresRemise,
+            remiseLigne: remiseLigne,
+            tva: '20',
+        });
+    }
+    // Vider le champ EAN pour le prochain scan
+    const inpEan = document.getElementById('inp-ean');
+    if (inpEan) { inpEan.value = ''; inpEan.focus(); }
+
+    // Reset remise ligne
+    const inpRemLigne = document.getElementById('inp-remise-ligne');
+    if (inpRemLigne) inpRemLigne.value = '0';
+    const prixEl = document.getElementById('prix-apres-remise');
+    if (prixEl) prixEl.textContent = '';
+    articleCourant = null;
+    document.getElementById('zone-article').innerHTML = '';
+    document.getElementById('zone-qty').style.display = 'none';
+    renderPanier();
+    toast('✅ Ajouté au panier', 'success');
+}
+
+function renderPanier() {
+    const card = document.getElementById('card-panier');
+    const lignesEl = document.getElementById('panier-lignes');
+    const countEl = document.getElementById('panier-count');
+    const totalEl = document.getElementById('total-ht');
+    const bottomAction = document.getElementById('bottom-action');
+
+    if (panier.length === 0) {
+        card.style.display = 'none';
+        bottomAction.style.display = 'none';
+        return;
+    }
+    card.style.display = '';
+    bottomAction.style.display = '';
+    countEl.textContent = panier.length;
+
+    let totalAvantRemise = 0;
+    let html = '';
+    panier.forEach((l, i) => {
+        const prixBase = l.quantite * (l.prixUnitaire || 0);
+        const prixRemise = l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0);
+        totalAvantRemise += prixRemise;
+        const remiseLigne = l.remiseLigne || 0;
+        html += '<div class="ligne">'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div class="l-ref">' + (l.reference || l.ean || '') + '</div>'
+            + '<div class="l-name">' + (l.designation || 'Article') + '</div>'
+            + (remiseLigne > 0 ? '<div style="font-size:10px;color:var(--danger);">Remise ligne: -' + remiseLigne + '%</div>' : '')
+            + '</div>'
+            + '<div class="l-qty">' + l.quantite + ' ×</div>'
+            + '<div class="l-prix">' + prixRemise.toFixed(2).replace('.',',') + ' €</div>'
+            + '<button class="l-del" data-i="' + i + '" onclick="supprimerLigne(parseInt(this.dataset.i))">✕</button>'
+            + '</div>';
+    });
+    lignesEl.innerHTML = html;
+
+    // Remise globale
+    const remiseGlobale = parseFloat(document.getElementById('inp-remise-globale')?.value || 0) || 0;
+    const montantRemise = totalAvantRemise * remiseGlobale / 100;
+    const totalHT = totalAvantRemise - montantRemise;
+    const totalTVA = totalHT * 0.2;
+    const totalTTC = totalHT * 1.2;
+
+    totalEl.textContent = totalHT.toFixed(2).replace('.',',') + ' €';
+
+    const remEl = document.getElementById('total-remise');
+    if (remEl) remEl.textContent = remiseGlobale > 0 ? '-' + montantRemise.toFixed(2).replace('.',',') + ' €' : '';
+
+    const tvaEl = document.getElementById('total-tva');
+    if (tvaEl) tvaEl.textContent = totalTVA.toFixed(2).replace('.',',') + ' €';
+
+    const ttcEl = document.getElementById('total-ttc');
+    if (ttcEl) ttcEl.textContent = totalTTC.toFixed(2).replace('.',',') + ' €';
+}
+
+function mettreAJourPrixRemise() {
+    if (!articleCourant) return;
+    const remise = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
+    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const prixRemise = prixBase * (1 - remise/100);
+    const el = document.getElementById('prix-apres-remise');
+    if (el) el.textContent = remise > 0 ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
+}
+
+function supprimerLigne(idx) {
+    panier.splice(idx, 1);
+    renderPanier();
+}
+
+function viderPanier() {
+    if (!confirm('Vider le panier ?')) return;
+    panier = [];
+    articleCourant = null;
+    document.getElementById('zone-article').innerHTML = '';
+    document.getElementById('zone-qty').style.display = 'none';
+    renderPanier();
+}
+
+// ============================================================
+// VALIDER COMMANDE / BL
+// ============================================================
+async function validerCommande() {
+    if (!document.getElementById('sel-client').value) {
+        toast('⚠️ Sélectionnez un client', 'warn'); return;
+    }
+    if (panier.length === 0) {
+        toast('⚠️ Le panier est vide', 'warn'); return;
+    }
+    const clientId = parseInt(document.getElementById('sel-client').value);
+    const client = clients.find(c => c.id === clientId) || {};
+    const now = new Date().toISOString();
+    const annee = new Date().getFullYear();
+    const prefixe = typeDoc === 'commande' ? 'MO' + String(annee).slice(-2) : 'MBL' + String(annee).slice(-2);
+    const store = typeDoc === 'commande' ? 'commandes' : 'livraisons';
+    const allDocs = await dbAll(store);
+    let max = 0;
+    allDocs.forEach(d => {
+        if (d.numero && d.numero.startsWith(prefixe)) {
+            const n = parseInt(d.numero.slice(prefixe.length));
+            if (!isNaN(n) && n > max) max = n;
+        }
+    });
+    const numero = prefixe + String(Math.max(max + 1, 1)).padStart(4, '0');
+    const remiseGlobale = parseFloat(document.getElementById('inp-remise-globale')?.value || 0) || 0;
+    const totalAvantRemise = panier.reduce((s,l) => s + l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0), 0);
+    const montantRemiseGlobale = totalAvantRemise * remiseGlobale / 100;
+    const totalHT = totalAvantRemise - montantRemiseGlobale;
+
+    const doc = {
+        numero,
+        date: now,
+        clientId,
+        clientNom: client.nom || '',
+        ref: document.getElementById('inp-ref').value.trim(),
+        dateLivraisonSouhaitee: document.getElementById('inp-date-livraison').value || '',
+        lignes: [...panier],
+        remiseGlobale,
+        totalAvantRemise,
+        montantRemiseGlobale,
+        totalHT,
+        totalTVA: totalHT * 0.2,
+        totalTTC: totalHT * 1.2,
+        statut: 'Brouillon',
+        source: 'mobile',
+        dateCreation: now,
+    };
+
+    // Demander confirmation
+    const totalStr = doc.totalHT.toFixed(2).replace('.',',');
+    const nbLignes = panier.length;
+    const clientNomStr = doc.clientNom || 'Client sélectionné';
+    const msg = '📋 Confirmer la ' + (typeDoc === 'commande' ? 'commande' : 'BL') + ' ?\n\n'
+        + 'Client : ' + clientNomStr + '\n'
+        + 'Articles : ' + nbLignes + ' ligne(s)\n'
+        + 'Total HT : ' + totalStr + ' €\n\n'
+        + 'Valider définitivement ?';
+
+    if (!confirm(msg)) return;
+
+    await dbAdd(store, doc);
+    toast('✅ ' + (typeDoc === 'commande' ? 'Commande' : 'BL') + ' ' + numero + ' créé(e) !', 'success');
+
+    // Proposer envoi email
+    if (client.email) {
+        setTimeout(() => {
+            if (confirm('Envoyer la confirmation de commande à ' + client.email + ' ?')) {
+                envoyerEmailCommande(doc, client);
+            }
+        }, 500);
+    }
+
+    // Remettre la page commande à zéro
+    panier = [];
+    articleCourant = null;
+    typeDoc = 'commande';
+
+    // Reset avec setTimeout pour laisser le DOM se mettre à jour
+    setTimeout(() => {
+        ['inp-ref','inp-ean'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const selClient = document.getElementById('sel-client');
+        if (selClient) selClient.value = '';
+        const zoneArt = document.getElementById('zone-article');
+        if (zoneArt) zoneArt.innerHTML = '';
+        const zoneQty = document.getElementById('zone-qty');
+        if (zoneQty) zoneQty.style.display = 'none';
+        const inpRemise = document.getElementById('inp-remise-globale');
+        if (inpRemise) inpRemise.value = '0';
+        const inpDate = document.getElementById('inp-date-livraison');
+        if (inpDate) inpDate.value = '';
+        const btnType = document.getElementById('btn-cmd');
+        if (btnType) { btnType.classList.add('active'); }
+        const btnBL = document.getElementById('btn-bl');
+        if (btnBL) { btnBL.classList.remove('active'); }
+        renderPanier();
+    }, 100);
+
+    // Revenir à l'accueil
+    goPage('accueil');
+}
+
+// ============================================================
+// HISTORIQUE
+// ============================================================
+async function chargerHistorique() {
+    const cmds = await dbAll('commandes');
+    const bls = await dbAll('livraisons');
+    const dvs = await dbAll('devis');
+    const tous = [
+        ...cmds.map(d=>({...d, type:'Commande', store:'commandes'})),
+        ...bls.map(d=>({...d, type:'BL', store:'livraisons'})),
+        ...dvs.map(d=>({...d, type:'Devis', store:'devis'}))
+    ].sort((a,b) => (b.dateCreation||'').localeCompare(a.dateCreation||''));
+
+    const el = document.getElementById('liste-docs');
+    if (tous.length === 0) {
+        el.innerHTML = '<p style="text-align:center;color:var(--text-2);font-size:13px;padding:20px;">Aucun document créé</p>';
+        return;
+    }
+
+    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+        + '<button onclick="envoyerSelectionServeur()" style="background:#f0fdf4;color:#065f46;border:1.5px solid #10b981;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">☁️ Envoyer sélection</button>'
+        + '<button onclick="envoyerToutesCommandesServeur()" style="background:#eff6ff;color:#1e40af;border:1.5px solid #2563eb;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">☁️ Envoyer tout</button>'
+        + '</div>';
+
+    html += tous.map((d, globalIdx) => {
+        const date = d.dateCreation ? new Date(d.dateCreation).toLocaleDateString('fr-FR') : '-';
+        const nb = (d.lignes||[]).length;
+        const total = (d.totalHT||0).toFixed(2).replace('.',',');
+        return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+            + '<input type="checkbox" class="doc-checkbox" data-id="' + d.id + '" data-store="' + d.store + '" data-numero="' + (d.numero||'') + '" style="width:18px;height:18px;cursor:pointer;">'
+            + '<div style="flex:1;">'
+            + '<div style="font-size:13px;font-weight:700;">' + (d.type==='Commande'?'🛒':d.type==='Devis'?'📝':'📦') + ' ' + (d.numero||'—') + '</div>'
+            + '<div style="font-size:11px;color:var(--text-2);">' + (d.clientNom||'') + ' · ' + date + ' · ' + nb + ' art.</div>'
+            + '</div>'
+            + '<div style="text-align:right;">'
+            + '<div style="font-size:13px;font-weight:700;color:var(--primary-light);">' + total + ' €</div>'
+            + '</div>'
+        + '<button data-store="' + d.store + '" data-id="' + d.id + '" onclick="voirDocument(this.dataset.store, parseInt(this.dataset.id))" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;">👁</button>'
+            + '<button data-store="' + d.store + '" data-id="' + d.id + '" onclick="supprimerDocument(this.dataset.store, parseInt(this.dataset.id))" style="background:none;border:none;font-size:18px;color:#ef4444;cursor:pointer;padding:4px;">🗑️</button>'
+            + '</div>';
+    }).join('');
+
+    // Bouton supprimer sélection
+    html += '<div style="margin-top:12px;">'
+        + '<button onclick="supprimerSelection()" style="width:100%;background:#fef2f2;color:#ef4444;border:1.5px solid #fca5a5;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">🗑️ Supprimer la sélection</button>'
+        + '</div>';
+
+    el.innerHTML = html;
+}
+
+let docCourant = null;
+let articleDocCourant = null; // article trouvé pour ajout dans doc
+
+async function voirDocument(store, id) {
+    const items = await dbAll(store);
+    const doc = items.find(x => x.id === id);
+    if (!doc) { toast('Document introuvable', 'warn'); return; }
+    docCourant = { ...doc, store };
+
+    document.getElementById('modal-doc-titre').textContent =
+        (store === 'commandes' ? '🛒 Commande ' : '📦 BL ') + (doc.numero || '');
+
+    const date = doc.dateCreation ? new Date(doc.dateCreation).toLocaleDateString('fr-FR') : '-';
+    document.getElementById('modal-doc-infos').innerHTML =
+        '<div><b>Client :</b> ' + (doc.clientNom || '-') + '</div>'
+        + '<div><b>Date :</b> ' + date + '</div>'
+        + (doc.ref ? '<div><b>Réf :</b> ' + doc.ref + '</div>' : '')
+        + (doc.dateLivraisonSouhaitee ? '<div><b>Livraison souhaitée :</b> ' + new Date(doc.dateLivraisonSouhaitee).toLocaleDateString("fr-FR") + '</div>' : '')
+        + '<div><b>Statut :</b> ' + (doc.statut || 'Brouillon') + '</div>';
+
+    // Initialiser remise globale depuis le doc
+    const remGlobEl = document.getElementById('doc-remise-globale');
+    if (remGlobEl) remGlobEl.value = docCourant.remiseGlobale || 0;
+
+    // Initialiser champs N° commande client, observation, remarque
+    const ncEl = document.getElementById('doc-num-commande-client');
+    if (ncEl) ncEl.value = docCourant.numCommandeClient || docCourant.ref || '';
+    const obsEl = document.getElementById('doc-observation');
+    if (obsEl) obsEl.value = docCourant.observation || '';
+    const dateLivEl = document.getElementById('doc-date-livraison');
+    if (dateLivEl) dateLivEl.value = docCourant.dateLivraisonSouhaitee || '';
+
+    // Reset zone ajout
+    document.getElementById('doc-add-ean').value = '';
+    document.getElementById('doc-add-result').textContent = '';
+    document.getElementById('doc-add-qty-zone').style.display = 'none';
+    document.getElementById('modal-doc-msg').textContent = '';
+    articleDocCourant = null;
+
+    rafraichirLignesDoc();
+    // Afficher bouton transfert seulement pour les devis
+    const transfertZone = document.getElementById('modal-doc-transfert');
+    const btnTransfert = document.getElementById('btn-transfert-cmd');
+    if (store === 'devis') {
+        transfertZone.style.display = '';
+        btnTransfert.onclick = () => transfererDevisEnCommande(id);
+        // Si déjà transféré, désactiver
+        if (docCourant.statut === 'Transféré') {
+            btnTransfert.textContent = '✅ Déjà transféré en ' + (docCourant.commandeCreee || 'commande');
+            btnTransfert.style.background = '#9ca3af';
+            btnTransfert.disabled = true;
+        } else {
+            btnTransfert.textContent = '🔀 Transférer en commande';
+            btnTransfert.style.background = '#f59e0b';
+            btnTransfert.disabled = false;
+        }
+    } else {
+        transfertZone.style.display = 'none';
+    }
+
+    document.getElementById('modal-doc').style.display = 'block';
+}
+
+function rafraichirLignesDoc() {
+    if (!docCourant) return;
+    const lignes = docCourant.lignes || [];
+    const el = document.getElementById('modal-doc-lignes');
+
+    el.innerHTML = lignes.length === 0
+        ? '<p style="color:var(--text-2);font-size:13px;text-align:center;padding:10px;">Aucune ligne</p>'
+        : lignes.map((l, i) => {
+            const total = (l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0)).toFixed(2).replace('.',',');
+            return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
+                + '<div style="flex:1;min-width:0;">'
+                + '<div style="font-size:12px;font-weight:700;color:var(--primary);">' + (l.reference || l.ean || '') + '</div>'
+                + '<div style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (l.designation || '') + '</div>'
+                + '<div style="display:flex;align-items:center;gap:4px;margin-top:3px;">'
+                + '<span style="font-size:11px;color:var(--text-2);">Remise%</span>'
+                + '<input type="text" inputmode="decimal" value="' + (l.remiseLigne||0) + '" data-i="' + i + '" onchange="changerRemiseLigneDoc(parseInt(this.dataset.i),this.value)" onclick="this.select()" style="width:45px;padding:2px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;text-align:center;">'
+                + '<span style="font-size:11px;color:var(--primary-light);font-weight:700;">' + total + ' €</span>'
+                + '</div>'
+                + '</div>'
+                + '<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">'
+                + '<button data-i="' + i + '" onclick="changerQtyDoc(parseInt(this.dataset.i),-1)" style="background:#f1f5f9;border:none;border-radius:6px;width:30px;height:30px;font-size:18px;cursor:pointer;">−</button>'
+                + '<span style="font-size:15px;font-weight:700;min-width:28px;text-align:center;">' + l.quantite + '</span>'
+                + '<button data-i="' + i + '" onclick="changerQtyDoc(parseInt(this.dataset.i),1)" style="background:#f1f5f9;border:none;border-radius:6px;width:30px;height:30px;font-size:18px;cursor:pointer;">+</button>'
+                + '</div>'
+                + '<button data-i="' + i + '" onclick="supprimerLigneDoc(parseInt(this.dataset.i))" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>'
+                + '</div>';
+        }).join('');
+
+    // Remise globale
+    const remiseGlobaleDoc = parseFloat(document.getElementById('doc-remise-globale')?.value || docCourant.remiseGlobale || 0) || 0;
+    const totalAvant = lignes.reduce((s,l) => s + l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0), 0);
+    const montantRemiseGlobale = totalAvant * remiseGlobaleDoc / 100;
+    const total = totalAvant - montantRemiseGlobale;
+    document.getElementById('modal-doc-total').textContent = total.toFixed(2).replace('.',',') + ' €';
+
+    // Afficher remise globale
+    const remEl = document.getElementById('modal-doc-remise-affichage');
+    if (remEl) remEl.textContent = remiseGlobaleDoc > 0 ? '− ' + montantRemiseGlobale.toFixed(2).replace('.',',') + ' €' : '';
+}
+
+function fermerModalDoc() {
+    document.getElementById('modal-doc').style.display = 'none';
+    docCourant = null;
+    articleDocCourant = null;
+}
+
+function changerQtyDoc(idx, delta) {
+    if (!docCourant || !docCourant.lignes[idx]) return;
+    docCourant.lignes[idx].quantite = Math.max(1, (docCourant.lignes[idx].quantite || 1) + delta);
+    rafraichirLignesDoc();
+}
+
+function changerRemiseLigneDoc(idx, valeur) {
+    if (!docCourant || !docCourant.lignes[idx]) return;
+    const remise = parseFloat(valeur) || 0;
+    const l = docCourant.lignes[idx];
+    l.remiseLigne = remise;
+    l.prixUnitaireRemise = (l.prixUnitaire || 0) * (1 - remise / 100);
+    rafraichirLignesDoc();
+}
+
+function supprimerLigneDoc(idx) {
+    if (!docCourant) return;
+    if (!confirm('Supprimer cette ligne ?')) return;
+    docCourant.lignes.splice(idx, 1);
+    rafraichirLignesDoc();
+}
+
+// Rechercher article pour ajout dans le doc
+async function ajouterArticleDoc() {
+    const val = document.getElementById('doc-add-ean').value.trim();
+    if (!val) return;
+    const arts = await dbAll('articles');
+    let art = arts.find(a =>
+        (a.codeBarres && a.codeBarres.toString() === val) ||
+        (a.reference && a.reference.toLowerCase() === val.toLowerCase())
+    );
+    if (!art && val.length >= 3) {
+        art = arts.find(a =>
+            (a.reference && a.reference.toLowerCase().startsWith(val.toLowerCase())) ||
+            (a.codeBarres && a.codeBarres.toString().startsWith(val))
+        );
+    }
+    const resEl = document.getElementById('doc-add-result');
+    const qtyZone = document.getElementById('doc-add-qty-zone');
+    if (art) {
+        articleDocCourant = art;
+        document.getElementById('doc-add-art-name').textContent =
+            (art.reference || '') + ' — ' + (art.designation || art.descriptionCourte || '') +
+            ' (' + (parseFloat(art.prixVente)||0).toFixed(2).replace('.',',') + ' € HT)';
+        document.getElementById('doc-add-qty').value = 1;
+        qtyZone.style.display = '';
+        resEl.textContent = '✅ Article trouvé';
+        resEl.style.color = '#065f46';
+    } else {
+        articleDocCourant = null;
+        qtyZone.style.display = 'none';
+        resEl.textContent = '❌ Article non trouvé';
+        resEl.style.color = '#ef4444';
+    }
+}
+
+function changeDocAddQty(delta) {
+    const inp = document.getElementById('doc-add-qty');
+    inp.value = Math.max(1, parseInt(inp.value || 1) + delta);
+}
+
+function confirmerAjoutArticleDoc() {
+    if (!docCourant || !articleDocCourant) return;
+    const qty = parseInt(document.getElementById('doc-add-qty').value) || 1;
+    if (!docCourant.lignes) docCourant.lignes = [];
+    // Vérifier si l'article existe déjà
+    const exist = docCourant.lignes.find(l => l.articleId === articleDocCourant.id);
+    if (exist) {
+        exist.quantite += qty;
+    } else {
+        docCourant.lignes.push({
+            articleId: articleDocCourant.id,
+            reference: articleDocCourant.reference || '',
+            designation: articleDocCourant.designation || articleDocCourant.descriptionCourte || '',
+            ean: articleDocCourant.codeBarres || '',
+            quantite: qty,
+            prixUnitaire: parseFloat(articleDocCourant.prixVente) || 0,
+            prixUnitaireRemise: parseFloat(articleDocCourant.prixVente) || 0,
+            tva: '20',
+        });
+    }
+    // Initialiser remise globale depuis le doc
+    const remGlobEl = document.getElementById('doc-remise-globale');
+    if (remGlobEl) remGlobEl.value = docCourant.remiseGlobale || 0;
+
+    // Initialiser champs N° commande client, observation, remarque
+    const ncEl = document.getElementById('doc-num-commande-client');
+    if (ncEl) ncEl.value = docCourant.numCommandeClient || docCourant.ref || '';
+    const obsEl = document.getElementById('doc-observation');
+    if (obsEl) obsEl.value = docCourant.observation || '';
+    const dateLivEl = document.getElementById('doc-date-livraison');
+    if (dateLivEl) dateLivEl.value = docCourant.dateLivraisonSouhaitee || '';
+
+    // Reset zone ajout
+    document.getElementById('doc-add-ean').value = '';
+    document.getElementById('doc-add-result').textContent = '';
+    document.getElementById('doc-add-qty-zone').style.display = 'none';
+    articleDocCourant = null;
+    rafraichirLignesDoc();
+    toast('✅ Article ajouté', 'success');
+}
+
+async function sauvegarderModifDoc() {
+    if (!docCourant) return;
+    const msg = document.getElementById('modal-doc-msg');
+    msg.textContent = '⏳ Sauvegarde...';
+    msg.style.color = '#2563eb';
+    // Recalculer totaux
+    const lignes = docCourant.lignes || [];
+    const remGlob = parseFloat(document.getElementById('doc-remise-globale')?.value || 0) || 0;
+    const totalAvantRemise = lignes.reduce((s,l) => s + l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0), 0);
+    docCourant.remiseGlobale = remGlob;
+    docCourant.totalAvantRemise = totalAvantRemise;
+    docCourant.montantRemiseGlobale = totalAvantRemise * remGlob / 100;
+    docCourant.totalHT = totalAvantRemise - docCourant.montantRemiseGlobale;
+    docCourant.totalTVA = docCourant.totalHT * 0.2;
+    docCourant.totalTTC = docCourant.totalHT * 1.2;
+    docCourant.dateModification = new Date().toISOString();
+    docCourant.numCommandeClient = document.getElementById('doc-num-commande-client')?.value.trim() || '';
+    docCourant.observation = document.getElementById('doc-observation')?.value.trim() || '';
+    docCourant.dateLivraisonSouhaitee = document.getElementById('doc-date-livraison')?.value || '';
+    // Sauvegarder
+    const store = docCourant.store;
+    const items = await dbAll(store);
+    const idx = items.findIndex(x => x.id === docCourant.id);
+    const toSave = { ...docCourant };
+    delete toSave.store;
+    if (idx >= 0) items[idx] = toSave;
+    else items.push(toSave);
+    localStorage.setItem(DB_PREFIX + store, JSON.stringify(items));
+    msg.textContent = '✅ Sauvegardé !';
+    msg.style.color = '#10b981';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+    toast('✅ Document sauvegardé', 'success');
+}
+
+async function envoyerDocumentServeur() {
+    if (!docCourant) return;
+    const msg = document.getElementById('modal-doc-msg');
+    if (!serveurToken) {
+        msg.textContent = '❌ Connectez-vous au serveur dans Synchro';
+        msg.style.color = '#ef4444';
+        return;
+    }
+    msg.textContent = '⏳ Envoi...';
+    msg.style.color = '#2563eb';
+    try {
+        // Sauvegarder d'abord
+        await sauvegarderModifDoc();
+        const store = docCourant.store;
+        const toSend = { ...docCourant };
+        delete toSend.store;
+        const r = await fetch(SERVEUR_URL + '/api/import/' + store, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-Token': serveurToken},
+            body: JSON.stringify({[store]: [toSend]})
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        msg.textContent = '✅ Envoyé au serveur !';
+        msg.style.color = '#10b981';
+        toast('✅ Document envoyé', 'success');
+    } catch(e) {
+        msg.textContent = '❌ ' + e.message;
+        msg.style.color = '#ef4444';
+        toast('❌ ' + e.message, 'error');
+    }
+}
+
+function modifierDocument() { sauvegarderModifDoc(); }
+
+
+async function supprimerDocument(store, id) {
+    if (!confirm('Supprimer ce document ?')) return;
+    const items = await dbAll(store);
+    const filtered = items.filter(x => x.id !== id);
+    localStorage.setItem(DB_PREFIX + store, JSON.stringify(filtered));
+    toast('✅ Document supprimé', 'success');
+    chargerHistorique();
+}
+
+async function supprimerSelection() {
+    const coches = document.querySelectorAll('.doc-checkbox:checked');
+    if (coches.length === 0) { toast('⚠️ Aucun document sélectionné', 'warn'); return; }
+    if (!confirm('Supprimer ' + coches.length + ' document(s) ?')) return;
+    for (const cb of coches) {
+        const store = cb.dataset.store;
+        const id = parseInt(cb.dataset.id);
+        const items = await dbAll(store);
+        localStorage.setItem(DB_PREFIX + store, JSON.stringify(items.filter(x => x.id !== id)));
+    }
+    toast('✅ ' + coches.length + ' document(s) supprimé(s)', 'success');
+    chargerHistorique();
+}
+
+async function supprimerTousDocuments() {
+    if (!confirm('Supprimer TOUS les documents ?')) return;
+    localStorage.removeItem(DB_PREFIX + 'commandes');
+    localStorage.removeItem(DB_PREFIX + 'livraisons');
+    localStorage.removeItem(DB_PREFIX + 'devis');
+    toast('✅ Tous les documents supprimés', 'success');
+    chargerHistorique();
+}
+
+// ============================================================
+// CONNEXION SERVEUR RENDER
+// ============================================================
+async function connecterRender() {
+    const pwd = document.getElementById('inp-pwd-render')?.value?.trim();
+    if (!pwd) { toast('⚠️ Saisissez le mot de passe', 'warn'); return; }
+
+    const statusEl = document.getElementById('render-status');
+    if (statusEl) { statusEl.textContent = '⏳ Connexion...'; statusEl.style.color = '#2563eb'; }
+
+    try {
+        const ctrl = new AbortController();
+        setTimeout(() => ctrl.abort(), 40000);
+        const r = await fetch(SERVEUR_URL + '/api/login', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({password: pwd}),
+            signal: ctrl.signal
+        });
+        const data = await r.json();
+        if (data.token) {
+            serveurToken = data.token;
+            localStorage.setItem('nsa_token', serveurToken);
+            if (statusEl) { statusEl.textContent = '✅ Connecté à ' + SERVEUR_URL; statusEl.style.color = '#10b981'; }
+            toast('✅ Connecté au serveur', 'success');
+            // Mettre à jour home status
+            const homeStatus = document.getElementById('home-server-status');
+            if (homeStatus) { homeStatus.textContent = '✅ Connecté au serveur'; homeStatus.style.background = '#f0fdf4'; homeStatus.style.color = '#065f46'; }
+        } else {
+            serveurToken = null;
+            localStorage.removeItem('nsa_token');
+            if (statusEl) { statusEl.textContent = '❌ ' + (data.error || 'Mot de passe incorrect'); statusEl.style.color = '#ef4444'; }
+            toast('❌ Mot de passe incorrect', 'error');
+        }
+    } catch(e) {
+        serveurToken = null;
+        localStorage.removeItem('nsa_token');
+        let msg = e.message;
+        if (msg.includes('abort') || msg.includes('timeout')) msg = 'Serveur endormi — visitez ' + SERVEUR_URL + ' dans le navigateur puis réessayez';
+        if (msg.includes('Failed to fetch') || msg.includes('Load failed')) msg = 'Serveur inaccessible — vérifiez votre connexion internet';
+        if (statusEl) { statusEl.textContent = '❌ ' + msg; statusEl.style.color = '#ef4444'; }
+        toast('❌ ' + msg.substring(0,50), 'error');
+    }
+}
+
+function deconnecterRender() {
+    serveurToken = null;
+    localStorage.removeItem('nsa_token');
+    const statusEl = document.getElementById('render-status');
+    if (statusEl) { statusEl.textContent = '☁️ Non connecté'; statusEl.style.color = '#64748b'; }
+    toast('Déconnecté', 'success');
+}
+
+// ============================================================
+// SYNCHRO : EXPORT / IMPORT
+// ============================================================
+async function envoyerSelectionServeur() {
+    const coches = document.querySelectorAll('.doc-checkbox:checked');
+    if (coches.length === 0) { toast('⚠️ Sélectionnez au moins un document', 'warn'); return; }
+    if (!serveurToken) { toast('❌ Connectez-vous au serveur dabord', 'error'); return; }
+
+    const res = document.getElementById('sync-result');
+    if (res) { res.textContent = '⏳ Envoi en cours...'; res.style.color = '#2563eb'; }
+
+    // Récupérer tous les stores concernés
+    const storesNecessaires = [...new Set([...coches].map(cb => cb.dataset.store))];
+    const allDocs = {};
+    for (const store of storesNecessaires) {
+        allDocs[store] = await dbAll(store);
+    }
+
+    const parStore = {};
+    for (const cb of coches) {
+        const store = cb.dataset.store;
+        const id = cb.dataset.id;
+        const numero = cb.dataset.numero;
+        const items = allDocs[store] || [];
+
+        // Chercher par id (string ou number) ou par numéro
+        let doc = items.find(x =>
+            String(x.id) === String(id) ||
+            x.id == id ||
+            (numero && x.numero === numero)
+        );
+
+        if (!doc && items.length > 0) {
+            // Chercher par numéro dans le texte de la ligne
+            const ligne = cb.closest('div[style]');
+            if (ligne) {
+                const texte = ligne.textContent;
+                doc = items.find(x => x.numero && texte.includes(x.numero));
+            }
+        }
+
+        if (doc) {
+            if (!parStore[store]) parStore[store] = [];
+            parStore[store].push(doc);
+        }
+    }
+
+    let nb = 0;
+    for (const [store, docs] of Object.entries(parStore)) {
+        try {
+            const r = await fetch(SERVEUR_URL + '/api/import/' + store, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Token': serveurToken},
+                body: JSON.stringify({[store]: docs})
+            });
+            if (r.ok) {
+                const d = await r.json();
+                nb += (d.added||0) + (d.updated||0);
+            }
+        } catch(e) { console.error('Envoi:', e); }
+    }
+
+    const nbCoches = coches.length;
+    // Si 0 doc envoyé mais des items existent, envoyer directement depuis localStorage
+    if (nb === 0 && nbCoches > 0) {
+        // Fallback : envoyer tous les docs de tous les stores concernés
+        for (const store of storesNecessaires) {
+            const items = allDocs[store] || [];
+            if (items.length > 0) {
+                try {
+                    const r = await fetch(SERVEUR_URL + '/api/import/' + store, {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json','X-Token': serveurToken},
+                        body: JSON.stringify({[store]: items})
+                    });
+                    if (r.ok) {
+                        const d = await r.json();
+                        nb += (d.added||0) + (d.updated||0);
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+    const msg = nb > 0
+        ? '✅ ' + nb + ' document(s) envoyé(s)'
+        : '⚠️ Aucun document trouvé — essayez "Envoyer tout"';
+    if (res) { res.textContent = msg; res.style.color = nb > 0 ? '#10b981' : '#f59e0b'; }
+    toast(msg, nb > 0 ? 'success' : 'warn');
+    if (nb > 0) chargerHistorique();
+}
+
+
+async function envoyerToutesCommandesServeur() {
+    const res = document.getElementById('sync-result');
+    if (!serveurToken) {
+        res.textContent = '❌ Connectez-vous au serveur dabord';
+        res.style.color = '#ef4444';
+        toast('❌ Non connecté au serveur', 'error');
+        return;
+    }
+    res.textContent = '⏳ Envoi en cours...';
+    res.style.color = '#2563eb';
+    try {
+        const cmds = await dbAll('commandes');
+        const bls  = await dbAll('livraisons');
+        const devis = await dbAll('devis');
+        let nb = 0;
+
+        // Envoyer commandes
+        if (cmds.length > 0) {
+            const r = await fetch(SERVEUR_URL + '/api/import/commandes', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Token': serveurToken},
+                body: JSON.stringify({commandes: cmds})
+            });
+            if (r.ok) { const d = await r.json(); nb += d.added + d.updated; }
+        }
+
+        // Envoyer BL
+        if (bls.length > 0) {
+            const r = await fetch(SERVEUR_URL + '/api/import/livraisons', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Token': serveurToken},
+                body: JSON.stringify({livraisons: bls})
+            });
+            if (r.ok) { const d = await r.json(); nb += d.added + d.updated; }
+        }
+
+        // Envoyer devis
+        if (devis.length > 0) {
+            const r = await fetch(SERVEUR_URL + '/api/import/devis', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Token': serveurToken},
+                body: JSON.stringify({devis: devis})
+            });
+            if (r.ok) { const d = await r.json(); nb += d.added + d.updated; }
+        }
+
+        res.textContent = '✅ ' + nb + ' document(s) envoyé(s) au serveur';
+        res.style.color = '#10b981';
+        toast('✅ ' + nb + ' doc(s) envoyé(s)', 'success');
+    } catch(e) {
+        res.textContent = '❌ ' + e.message;
+        res.style.color = '#ef4444';
+        toast('❌ ' + e.message, 'error');
+    }
+}
+
+// Transférer un devis en commande
+async function transfererDevisEnCommande(id) {
+    const devis = await dbAll('devis');
+    const dv = devis.find(x => x.id === id);
+    if (!dv) { toast('Devis introuvable', 'warn'); return; }
+
+    if (!confirm('Transférer le devis ' + (dv.numero||'') + ' en commande ?')) return;
+
+    const now = new Date().toISOString();
+    const annee = new Date().getFullYear();
+    const prefix = 'MO' + String(annee).slice(-2);
+    const cmds = await dbAll('commandes');
+    let max = 0;
+    cmds.forEach(c => {
+        if (c.numero && c.numero.startsWith(prefix)) {
+            const n = parseInt(c.numero.slice(prefix.length));
+            if (!isNaN(n) && n > max) max = n;
+        }
+    });
+    const numero = prefix + String(Math.max(max+1,1)).padStart(4,'0');
+
+    const cmd = {
+        ...dv,
+        id: undefined,
+        numero,
+        date: now,
+        dateCreation: now,
+        statut: 'Brouillon',
+        source: 'mobile-devis',
+        devisOrigine: dv.numero,
+    };
+    delete cmd.id;
+
+    await dbAdd('commandes', cmd);
+
+    // Marquer le devis comme transféré
+    const idx = devis.findIndex(x => x.id === id);
+    if (idx >= 0) {
+        devis[idx].statut = 'Transféré';
+        devis[idx].commandeCreee = numero;
+        localStorage.setItem(DB_PREFIX + 'devis', JSON.stringify(devis));
+    }
+
+    toast('✅ Commande ' + numero + ' créée depuis devis ' + (dv.numero||''), 'success');
+    fermerModalDoc();
+    chargerHistorique();
+}
+
+async function exporterCommandes() {
+    const cmds = await dbAll('commandes');
+    const bls = await dbAll('livraisons');
+    const payload = {
+        type: 'erp-mobile-export',
+        date: new Date().toISOString(),
+        commandes: cmds,
+        livraisons: bls,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'export-mobile-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✅ Export téléchargé', 'success');
+}
+
+function importerArticles() {
+    document.getElementById('file-import').dataset.mode = 'articles';
+    document.getElementById('file-import').click();
+}
+
+function importerClients() {
+    document.getElementById('file-import').dataset.mode = 'clients';
+    document.getElementById('file-import').click();
+}
+
+async function traiterImport(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+    const mode = input.dataset.mode;
+    const text = await file.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { toast('❌ Fichier JSON invalide : ' + e.message, 'error'); return; }
+    await traiterData(data, mode);
+}
+
+async function traiterData(data, mode) {
+    // Nettoyer un objet pour IndexedDB (supprimer tout ce qui n'est pas sérialisable)
+    function nettoyer(obj) {
+        return JSON.parse(JSON.stringify(obj, (key, val) => {
+            if (typeof val === 'function') return undefined;
+            if (typeof val === 'undefined') return null;
+            if (val instanceof Error) return val.message;
+            return val;
+        }));
+    }
+
+    // Extraire le bon tableau selon le mode
+    function extraire(key) {
+        if (Array.isArray(data)) return data;
+        if (!data || typeof data !== 'object') return null;
+        if (Array.isArray(data[key])) return data[key];
+        // Cherche sans tenir compte de la casse
+        const k = Object.keys(data).find(k2 => k2.toLowerCase() === key.toLowerCase());
+        if (k && Array.isArray(data[k])) return data[k];
+        // Cherche le premier grand tableau
+        for (const v of Object.values(data)) {
+            if (Array.isArray(v) && v.length > 0) return v;
+        }
+        return null;
+    }
+
+    if (mode === 'articles') {
+        const items = extraire('articles');
+        if (!items || items.length === 0) {
+            toast('❌ Aucun article dans ce fichier', 'error'); return;
+        }
+        await dbClear('articles');
+        let ok = 0, skip = 0;
+        for (const a of items) {
+            try {
+                await dbAdd('articles', nettoyer({...a}));
+                ok++;
+            } catch(err) {
+                try {
+                    const c = nettoyer({...a});
+                    delete c.id;
+                    await dbAdd('articles', c);
+                    ok++;
+                } catch(e2) { skip++; console.warn('Skip:', a.reference, e2.message); }
+            }
+        }
+        articles = await dbAll('articles');
+        const msg = '✅ ' + ok + ' article(s) importé(s)' + (skip ? ', ' + skip + ' ignoré(s)' : '');
+        document.getElementById('sync-info').textContent = msg;
+        toast(msg, 'success');
+
+    } else if (mode === 'clients') {
+        const items = extraire('clients');
+        if (!items || items.length === 0) {
+            toast('❌ Aucun client dans ce fichier', 'error'); return;
+        }
+        await dbClear('clients');
+        let ok = 0, skip = 0;
+        for (const c of items) {
+            try {
+                await dbAdd('clients', nettoyer({...c}));
+                ok++;
+            } catch(err) {
+                try {
+                    const copy = nettoyer({...c});
+                    delete copy.id;
+                    await dbAdd('clients', copy);
+                    ok++;
+                } catch(e2) { skip++; console.warn('Skip:', c.nom, e2.message); }
+            }
+        }
+        clients = await dbAll('clients');
+        remplirSelectClients();
+        const msg = '✅ ' + ok + ' client(s) importé(s)' + (skip ? ', ' + skip + ' ignoré(s)' : '');
+        document.getElementById('sync-info').textContent = msg;
+        toast(msg, 'success');
+    }
+    await chargerStats();
+}
+
+async function viderBase() {
+    if (!confirm('Supprimer toutes les données locales ?')) return;
+    ['commandes','livraisons','articles','clients'].forEach(s => {
+        localStorage.removeItem(DB_PREFIX + s);
+    });
+    panier = []; articles = []; clients = [];
+    renderPanier();
+    remplirSelectClients();
+    await chargerStats();
+    toast('✅ Base vidée', 'success');
+}
+
+async function chargerStats() {
+    const [arts, clis, cmds, bls] = await Promise.all([
+        dbAll('articles'), dbAll('clients'), dbAll('commandes'), dbAll('livraisons')
+    ]);
+    document.getElementById('stats-info').innerHTML =
+        '📦 Articles : <strong>' + arts.length + '</strong><br>' +
+        '👥 Clients : <strong>' + clis.length + '</strong><br>' +
+        '🛒 Commandes : <strong>' + cmds.length + '</strong><br>' +
+        '📦 Bons de livraison : <strong>' + bls.length + '</strong>';
+}
+
+// ============================================================
+// SCANNER CODE-BARRES
+// ============================================================
+// ============================================================
+// SCANNER CODE-BARRES (getUserMedia - fonctionne sur HTTPS)
+// ============================================================
+let torchTrack = null;
+
+async function ouvrirCameraScan() {
+    // Déclencher la capture photo native iPhone
+    document.getElementById('inp-capture-photo').click();
+}
+
+function lancerQuagga() {}
+
+let eanTimer = null;
+
+function onEanInput(el) {
+    const val = el.value.trim();
+
+    // Annuler le timer précédent
+    if (eanTimer) { clearTimeout(eanTimer); eanTimer = null; }
+
+    // Si plus de 13 chiffres → cumul, garder les 13 derniers
+    if (/^[0-9]+$/.test(val) && val.length > 13) {
+        el.value = val.slice(-13);
+        rechercherArticle();
+        return;
+    }
+
+    // EAN13 exact → attendre 150ms que la scannette finisse d'envoyer
+    if (/^[0-9]{13}$/.test(val)) {
+        eanTimer = setTimeout(() => {
+            if (document.getElementById('inp-ean').value.trim().length === 13) {
+                rechercherArticle();
+            }
+        }, 150);
+        return;
+    }
+
+    // Code numérique en cours → attendre 400ms (fin de saisie scannette)
+    if (val.length >= 5 && /^[0-9]+$/.test(val)) {
+        eanTimer = setTimeout(() => {
+            const finalVal = document.getElementById('inp-ean').value.trim();
+            if (finalVal.length >= 8) rechercherArticle();
+        }, 400);
+        return;
+    }
+    // Code alphanumérique avec / → attendre Enter
+}
+
+function onEanKeydown(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        event.preventDefault();
+        rechercherArticle();
+    }
+}
+
+function focusScan() {
+    // Active le champ et affiche le clavier pour la scannette
+    const inp = document.getElementById('inp-ean');
+    inp.value = '';
+    inp.focus();
+    // Message d'aide
+    toast('🔌 Scannette prête — scannez le code-barres', 'success');
+}
+
+function onBarcodeNative(val) {
+    if (!val) return;
+    document.getElementById('inp-ean').value = val.trim();
+    document.getElementById('inp-barcode-native').value = '';
+    rechercherArticle();
+}
+
+async function collerDepuisPressePapier() {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+            document.getElementById('inp-ean').value = text.trim();
+            rechercherArticle();
+        }
+    } catch(e) {
+        document.getElementById('inp-ean').focus();
+    }
+}
+
+
+async function analyserPhotoBarcode(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+    toast('🔍 Analyse du code-barres...', 'success');
+
+    // Essayer BarcodeDetector natif d'abord
+    if ('BarcodeDetector' in window) {
+        try {
+            const bitmap = await createImageBitmap(file);
+            const detector = new BarcodeDetector({
+                formats: ['ean_13','ean_8','code_128','code_39','upc_a','upc_e','qr_code']
+            });
+            const codes = await detector.detect(bitmap);
+            bitmap.close();
+            if (codes.length > 0) {
+                onCodeDetecte(codes[0].rawValue);
+                return;
+            }
+            toast('⚠️ Code non détecté - réessayez en cadrant mieux', 'warn');
+            return;
+        } catch(e) { console.log('BarcodeDetector:', e); }
+    }
+
+    // ZXing fallback
+    if (typeof ZXing !== 'undefined') {
+        try {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            await new Promise((res,rej) => { img.onload=res; img.onerror=rej; img.src=url; });
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            const imgData = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+            const lum = new ZXing.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
+            const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(lum));
+            const hints = new Map([[ZXing.DecodeHintType.TRY_HARDER, true]]);
+            const result = new ZXing.MultiFormatReader().decode(bmp, hints);
+            if (result) { onCodeDetecte(result.getText()); return; }
+        } catch(e) {}
+    }
+
+    toast('⚠️ Non lu - saisissez manuellement', 'warn');
+}
+
+async function scanPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+
+    toast('🔍 Analyse...', 'success');
+
+    // Créer une image bitmap depuis la photo
+    const url = URL.createObjectURL(file);
+
+    // Méthode 1 : BarcodeDetector natif (Safari 17+ / Chrome)
+    if ('BarcodeDetector' in window) {
+        try {
+            const img = await createImageBitmap(await fetch(url).then(r => r.blob()));
+            const detector = new BarcodeDetector({
+                formats: ['ean_13','ean_8','code_128','code_39','upc_a','upc_e']
+            });
+            const codes = await detector.detect(img);
+            URL.revokeObjectURL(url);
+            if (codes.length > 0) {
+                onCodeDetecte(codes[0].rawValue);
+                return;
+            }
+        } catch(e) { console.log('BarcodeDetector:', e.message); }
+    }
+
+    // Méthode 2 : ZXing sur canvas
+    if (typeof ZXing !== 'undefined') {
+        try {
+            const img = new Image();
+            await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+
+            // Essayer plusieurs tailles pour améliorer la lecture
+            const sizes = [
+                { w: img.naturalWidth, h: img.naturalHeight },
+                { w: img.naturalWidth * 2, h: img.naturalHeight * 2 },
+                { w: Math.round(img.naturalWidth * 0.5), h: Math.round(img.naturalHeight * 0.5) }
+            ];
+
+            const reader = new ZXing.MultiFormatReader();
+            const hints = new Map();
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                ZXing.BarcodeFormat.EAN_13,
+                ZXing.BarcodeFormat.EAN_8,
+                ZXing.BarcodeFormat.CODE_128,
+                ZXing.BarcodeFormat.CODE_39,
+                ZXing.BarcodeFormat.UPC_A,
+            ]);
+            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+            reader.setHints(hints);
+
+            for (const size of sizes) {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size.w;
+                    canvas.height = size.h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, size.w, size.h);
+                    const imgData = ctx.getImageData(0, 0, size.w, size.h);
+                    const lum = new ZXing.RGBLuminanceSource(imgData.data, size.w, size.h);
+                    const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(lum));
+                    const result = reader.decode(bmp);
+                    if (result && result.getText()) {
+                        URL.revokeObjectURL(url);
+                        onCodeDetecte(result.getText());
+                        return;
+                    }
+                } catch(e) {}
+            }
+            URL.revokeObjectURL(url);
+            toast('⚠️ Code non lu — rapprochez et réessayez', 'warn');
+        } catch(e) {
+            URL.revokeObjectURL(url);
+            toast('⚠️ Erreur lecture — saisissez manuellement', 'warn');
+        }
+        return;
+    }
+
+    URL.revokeObjectURL(url);
+    toast('⚠️ Saisissez le code manuellement', 'warn');
+}
+
+
+function onCodeDetecte(code) {
+    fermerScanner();
+    document.getElementById('inp-ean').value = code;
+    document.getElementById('inp-ean').focus();
+    rechercherArticle();
+    toast('✅ Code : ' + code, 'success');
+}
+
+function fermerScanner() {
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+    const reader = document.getElementById('html5qr-reader');
+    if (reader) { reader.style.display = 'none'; reader.innerHTML = ''; }
+    const overlay = document.getElementById('scanner-overlay');
+    overlay.classList.remove('active');
+}
+
+async function forcerFlash() {
+    if (!torchTrack) return;
+    try {
+        const capabilities = torchTrack.getCapabilities();
+        if (capabilities.torch) {
+            const settings = torchTrack.getSettings();
+            await torchTrack.applyConstraints({ advanced: [{ torch: !settings.torch }] });
+        } else {
+            toast('Flash non disponible', 'warn');
+        }
+    } catch(e) { toast('Flash: ' + e.message, 'warn'); }
+}
+
+function saisieManuelle() {
+    const code = prompt('Entrez le code-barres ou la référence :');
+    if (code && code.trim()) {
+        document.getElementById('inp-ean').value = code.trim();
+        rechercherArticle();
+    }
+}
+
+// Ancienne fonction scannerImage gardée pour compatibilité
+function scannerImage(input) {}
+
+
+// ============================================================
+// GESTION DEVIS
+// ============================================================
+let panierDevis = [];
+let articleDevisCourant = null;
+
+function initDevis() {
+    // Remplir le select client devis
+    const sel = document.getElementById('sel-client-devis');
+    if (!sel) return;
+    const val = sel.value;
+    sel.innerHTML = '<option value="">-- Sélectionner un client --</option>';
+    clients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = (c.code ? c.code + ' — ' : '') + (c.nom || 'Client ' + c.id);
+        sel.appendChild(opt);
+    });
+    sel.value = val;
+}
+
+async function rechercherArticleDevis() {
+    const val = document.getElementById('inp-ean-devis').value.trim();
+    if (!val) return;
+    const arts = await dbAll('articles');
+    let art = arts.find(a =>
+        (a.codeBarres && a.codeBarres.toString() === val) ||
+        (a.reference && a.reference.toLowerCase() === val.toLowerCase())
+    );
+    if (!art && val.length >= 3) {
+        art = arts.find(a =>
+            (a.reference && a.reference.toLowerCase().startsWith(val.toLowerCase()))
+        );
+    }
+    const zone = document.getElementById('zone-article-devis');
+    const zoneQty = document.getElementById('zone-qty-devis');
+    if (art) {
+        articleDevisCourant = art;
+        document.getElementById('inp-qty-devis').value = 1;
+        const photoHTML = art.photo ? '<img src="' + art.photo + '" alt="">' : '<div class="art-icon">📦</div>';
+        zone.innerHTML = '<div class="article-found">' + photoHTML
+            + '<div class="art-info">'
+            + '<div class="art-ref">' + (art.reference || '') + '</div>'
+            + '<div class="art-name">' + (art.designation || art.descriptionCourte || 'Article') + '</div>'
+            + '<div class="art-price">' + (parseFloat(art.prixVente)||0).toFixed(2).replace('.',',') + ' € HT</div>'
+            + '</div></div>';
+        zoneQty.style.display = '';
+        document.getElementById('inp-ean-devis').value = '';
+    } else {
+        articleDevisCourant = null;
+        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong></div>';
+        zoneQty.style.display = 'none';
+    }
+}
+
+function changeQtyDevis(delta) {
+    const inp = document.getElementById('inp-qty-devis');
+    inp.value = Math.max(1, parseInt(inp.value) + delta);
+}
+
+function ajouterAuPanierDevis() {
+    if (!articleDevisCourant) return;
+    const qty = parseInt(document.getElementById('inp-qty-devis').value) || 1;
+    const exist = panierDevis.find(l => l.articleId === articleDevisCourant.id);
+    if (exist) { exist.quantite += qty; }
+    else {
+        panierDevis.push({
+            articleId: articleDevisCourant.id,
+            reference: articleDevisCourant.reference || '',
+            designation: articleDevisCourant.designation || articleDevisCourant.descriptionCourte || '',
+            ean: articleDevisCourant.codeBarres || '',
+            quantite: qty,
+            prixUnitaire: parseFloat(articleDevisCourant.prixVente) || 0,
+            prixUnitaireRemise: parseFloat(articleDevisCourant.prixVente) || 0,
+            tva: '20',
+        });
+    }
+    articleDevisCourant = null;
+    document.getElementById('zone-article-devis').innerHTML = '';
+    document.getElementById('zone-qty-devis').style.display = 'none';
+    renderPanierDevis();
+    toast('✅ Ajouté', 'success');
+}
+
+function renderPanierDevis() {
+    const card = document.getElementById('card-panier-devis');
+    const lignesEl = document.getElementById('panier-devis-lignes');
+    const countEl = document.getElementById('panier-devis-count');
+    const totalEl = document.getElementById('total-ht-devis');
+    if (panierDevis.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    countEl.textContent = panierDevis.length;
+    let totalHT = 0;
+    lignesEl.innerHTML = panierDevis.map((l, i) => {
+        const montant = l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0);
+        totalHT += montant;
+        return '<div class="ligne">'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div class="l-ref">' + (l.reference || '') + '</div>'
+            + '<div class="l-name">' + (l.designation || '') + '</div>'
+            + '</div>'
+            + '<div class="l-qty">' + l.quantite + ' ×</div>'
+            + '<div class="l-prix">' + montant.toFixed(2).replace('.',',') + ' €</div>'
+            + '<button class="l-del" data-i="' + i + '" onclick="panierDevis.splice(parseInt(this.dataset.i),1);renderPanierDevis();">✕</button>'
+            + '</div>';
+    }).join('');
+    totalEl.textContent = totalHT.toFixed(2).replace('.',',') + ' €';
+}
+
+async function validerDevis() {
+    const clientId = document.getElementById('sel-client-devis')?.value;
+    if (!clientId) { toast('⚠️ Sélectionnez un client', 'warn'); return; }
+    if (panierDevis.length === 0) { toast('⚠️ Panier vide', 'warn'); return; }
+    const client = clients.find(c => c.id == clientId) || {};
+    const now = new Date().toISOString();
+    const annee = new Date().getFullYear();
+    const prefix = 'MDV' + String(annee).slice(-2);
+    const devisExist = JSON.parse(localStorage.getItem(DB_PREFIX + 'devis') || '[]');
+    let max = 0;
+    devisExist.forEach(d => { if(d.numero && d.numero.startsWith(prefix)) { const n=parseInt(d.numero.slice(prefix.length)); if(!isNaN(n)&&n>max) max=n; }});
+    const numero = prefix + String(Math.max(max+1,1)).padStart(4,'0');
+    const totalHT = panierDevis.reduce((s,l) => s + l.quantite*(l.prixUnitaireRemise||l.prixUnitaire||0), 0);
+    const devis = {
+        numero, date: now, clientId: parseInt(clientId), clientNom: client.nom||'',
+        ref: document.getElementById('inp-ref-devis')?.value||'',
+        lignes: [...panierDevis], totalHT, totalTVA: totalHT*0.2, totalTTC: totalHT*1.2,
+        statut: 'Devis', source: 'mobile', dateCreation: now,
+    };
+    if (!confirm('Valider le devis ' + numero + ' pour ' + (client.nom||'') + ' \n' + panierDevis.length + ' article(s) — ' + totalHT.toFixed(2) + ' € HT ?')) return;
+    devisExist.push(devis);
+    localStorage.setItem(DB_PREFIX + 'devis', JSON.stringify(devisExist));
+    // Reset
+    panierDevis = [];
+    document.getElementById('sel-client-devis').value = '';
+    document.getElementById('inp-ref-devis').value = '';
+    document.getElementById('zone-article-devis').innerHTML = '';
+    document.getElementById('zone-qty-devis').style.display = 'none';
+    renderPanierDevis();
+    toast('✅ Devis ' + numero + ' créé !', 'success');
+    goPage('accueil');
+}
+
+// ============================================================
+// GESTION CLIENTS MOBILE
+// ============================================================
+async function ouvrirModifClient(id) {
+    const cl = clients.find(c => c.id === id);
+    if (!cl) { toast('Client introuvable', 'warn'); return; }
+    document.getElementById('mc-id').value = id;
+    document.getElementById('mc-code').value = cl.code || cl.codeClient || '';
+    document.getElementById('mc-nom').value = cl.nom || '';
+    document.getElementById('mc-contact').value = cl.contact || '';
+    document.getElementById('mc-adresse').value = cl.adresse || cl.adresse1 || '';
+    document.getElementById('mc-cp').value = cl.cp || cl.codePostal || '';
+    document.getElementById('mc-ville').value = cl.ville || '';
+    document.getElementById('mc-tel').value = cl.telephone || '';
+    document.getElementById('mc-email').value = cl.email || '';
+    document.getElementById('mc-conditions').value = cl.conditionsPaiement || '';
+    document.getElementById('mc-famille').value = cl.familleClient || cl.famille || '';
+    document.getElementById('mc-tva').value = cl.tvaIntracom || cl.tva || '';
+    document.getElementById('modal-modif-client').style.display = 'flex';
+}
+
+function fermerModifClient() {
+    document.getElementById('modal-modif-client').style.display = 'none';
+}
+
+async function sauvegarderModifClient() {
+    const id = parseInt(document.getElementById('mc-id').value);
+    const nom = document.getElementById('mc-nom').value.trim();
+    if (!nom) { toast('⚠️ Raison sociale obligatoire', 'warn'); return; }
+    const idx = clients.findIndex(c => c.id === id);
+    if (idx < 0) { toast('Client introuvable', 'warn'); return; }
+    clients[idx] = {
+        ...clients[idx],
+        code: document.getElementById('mc-code').value.trim().toUpperCase(),
+        nom,
+        contact: document.getElementById('mc-contact').value.trim(),
+        adresse1: document.getElementById('mc-adresse').value.trim(),
+        cp: document.getElementById('mc-cp').value.trim(),
+        ville: document.getElementById('mc-ville').value.trim(),
+        telephone: document.getElementById('mc-tel').value.trim(),
+        email: document.getElementById('mc-email').value.trim(),
+        conditionsPaiement: document.getElementById('mc-conditions').value,
+        familleClient: document.getElementById('mc-famille').value.trim(),
+        tvaIntracom: document.getElementById('mc-tva').value.trim(),
+        dateModification: new Date().toISOString(),
+    };
+    localStorage.setItem(DB_PREFIX + 'clients', JSON.stringify(clients));
+    remplirSelectClients();
+    fermerModifClient();
+    chargerClientsMobile();
+    toast('✅ Client mis à jour', 'success');
+}
+
+function ouvrirNouveauClient() {
+    document.getElementById('modal-client').style.display = 'flex';
+    document.getElementById('nc-code').focus();
+}
+
+function fermerNouveauClient() {
+    document.getElementById('modal-client').style.display = 'none';
+    // Vider les champs
+    ['nc-code','nc-nom','nc-adresse','nc-cp','nc-ville','nc-tel','nc-email','nc-famille','nc-tva'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('nc-conditions').value = '';
+}
+
+async function sauvegarderNouveauClient() {
+    const code = document.getElementById('nc-code').value.trim().toUpperCase();
+    const nom  = document.getElementById('nc-nom').value.trim();
+    if (!code) { toast('⚠️ Code client obligatoire', 'warn'); return; }
+    if (!nom)  { toast('⚠️ Raison sociale obligatoire', 'warn'); return; }
+    
+    // Vérifier doublon
+    const existant = clients.find(c => c.code === code);
+    if (existant) { toast('⚠️ Code ' + code + ' déjà utilisé', 'warn'); return; }
+    
+    const client = {
+        code,
+        nom,
+        contact:            document.getElementById('nc-contact').value.trim(),
+        adresse1:           document.getElementById('nc-adresse').value.trim(),
+        cp:                 document.getElementById('nc-cp').value.trim(),
+        ville:              document.getElementById('nc-ville').value.trim(),
+        telephone:          document.getElementById('nc-tel').value.trim(),
+        email:              document.getElementById('nc-email').value.trim(),
+        conditionsPaiement: document.getElementById('nc-conditions').value,
+        familleClient:      document.getElementById('nc-famille').value.trim(),
+        tvaIntracom:        document.getElementById('nc-tva').value.trim(),
+        pays:               'France',
+        dateCreation:       new Date().toISOString(),
+        source:             'mobile',
+    };
+    
+    await dbAdd('clients', client);
+    clients = await dbAll('clients');
+    remplirSelectClients();
+    
+    // Sélectionner automatiquement le nouveau client
+    const newClient = clients.find(c => c.code === code);
+    if (newClient) document.getElementById('sel-client').value = newClient.id;
+    
+    fermerNouveauClient();
+    toast('✅ Client ' + code + ' créé', 'success');
+}
+
+// ============================================================
+// IMPORT DEPUIS SERVEUR LOCAL
+// ============================================================
+let serveurURL = null;
+
+async function connecterServeur() {
+    const inp = document.getElementById('inp-ip').value.trim();
+    if (!inp) { toast('⚠️ Entrez IP du PC', 'warn'); return; }
+    const url = inp.startsWith('http') ? inp.replace(/\/$/, '') : 'http://' + inp + ':8765';
+    setStatus('🔍 Connexion à ' + url + '...', '#7c3aed');
+    await testerServeur(url);
+}
+
+async function detecterServeur() {
+    setStatus('🔍 Détection en cours...', '#7c3aed');
+    const candidates = new Set();
+
+    // Si ouvert depuis le serveur (http://192.168.x.x:8765/)
+    try {
+        const u = new URL(window.location.href);
+        if (u.port === '8765') candidates.add(u.origin);
+        else if (u.hostname !== 'localhost') candidates.add('http://' + u.hostname + ':8765');
+    } catch(e) {}
+
+    // Plages réseau communes
+    for (const base of ['192.168.1.','192.168.0.','192.168.2.','10.0.0.','10.0.1.']) {
+        for (const n of [1,2,3,10,20,50,100,101,102,103,104,105,200,254]) {
+            candidates.add('http://' + base + n + ':8765');
+        }
+    }
+
+    for (const url of candidates) {
+        try {
+            const ctrl = new AbortController();
+            setTimeout(() => ctrl.abort(), 400);
+            const r = await fetch(url + '/api/files', {
+                signal: ctrl.signal,
+                mode: 'cors'
+            });
+            if (r.ok) {
+                const ip = url.replace('http://','').replace(':8765','');
+                document.getElementById('inp-ip').value = ip;
+                await testerServeur(url);
+                return;
+            }
+        } catch(e) {}
+    }
+    setStatus('❌ Non trouvé. Vérifiez que LANCER-SERVEUR.bat tourne sur le PC et entrez IP manuellement.', '#ef4444');
+}
+
+async function testerServeur(url) {
+    try {
+        const ctrl2 = new AbortController();
+        setTimeout(() => ctrl2.abort(), 4000);
+        const r = await fetch(url + '/api/files', { signal: ctrl2.signal, mode: 'cors' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const files = await r.json();
+        serveurURL = url;
+        setStatus('✅ Connecté ! ' + files.length + ' fichier(s) trouvé(s)', '#10b981');
+        afficherFichiersServeur(files);
+        return true;
+    } catch(e) {
+        setStatus('❌ Échec : ' + e.message, '#ef4444');
+        return false;
+    }
+}
+
+function setStatus(msg, color) {
+    const s = document.getElementById('serveur-status');
+    if (s) { s.textContent = msg; s.style.color = color || 'var(--text-2)'; }
+}
+
+
+function afficherFichiersServeur(files) {
+    const zone = document.getElementById('zone-serveur');
+    const cont = document.getElementById('serveur-fichiers');
+    if (!files || files.length === 0) {
+        cont.innerHTML = '<p style="font-size:12px;color:#64748b;">Aucun fichier JSON sur le serveur.<br>Exportez articles/clients depuis ERP.</p>';
+        zone.style.display = '';
+        return;
+    }
+    cont.innerHTML = files.map(f => {
+        const isClients = f.name.toLowerCase().includes('client');
+        const icon = isClients ? '👥' : '📦';
+        const label = isClients ? 'Importer clients' : 'Importer articles';
+        const mode = isClients ? 'clients' : 'articles';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #10b981;border-radius:8px;padding:8px 12px;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:700;color:#065f46;">${icon} ${f.name}</div>
+            <button onclick="importerDepuisServeur('${f.name}','${mode}')" style="background:#10b981;color:white;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">${label}</button>
+        </div>`;
+    }).join('');
+    zone.style.display = '';
+}
+
+async function importerDepuisServeur(filename, mode) {
+    if (!serveurURL) { toast('❌ Serveur non connecté', 'error'); return; }
+    setStatus('⏳ Chargement de ' + filename + '...', '#2563eb');
+    try {
+        const url = serveurURL + '/api/json/' + encodeURIComponent(filename);
+        const r = await fetch(url, { mode: 'cors', signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 15000); return c.signal; })() });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        await traiterData(data, mode);
+        setStatus('', '');
+    } catch(e) {
+        toast('❌ ' + e.message, 'error');
+        setStatus('❌ Erreur : ' + e.message, '#ef4444');
+    }
+}
+
+// ============================================================
+// EMAIL CLIENT
+// ============================================================
+function envoyerEmailClient() {
+    if (!docCourant) return;
+    // Récupérer l'email du client
+    const client = clients.find(c => c.id === docCourant.clientId) || {};
+    const email = client.email || docCourant.clientEmail || '';
+    envoyerEmailCommande(docCourant, client);
+}
+
+function envoyerEmailCommande(doc, client) {
+    const email = client.email || doc.clientEmail || '';
+    const lignes = doc.lignes || [];
+    const date = doc.dateCreation ? new Date(doc.dateCreation).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+    const type = doc.statut === 'Devis' ? 'DEVIS' : 'CONFIRMATION DE COMMANDE';
+    const NL = '%0A'; // saut de ligne encodé pour mailto
+
+    let body = type + ' N%C2%B0 ' + encodeURIComponent(doc.numero || '') + NL;
+    body += 'Date : ' + date + NL;
+    body += 'Client : ' + encodeURIComponent(client.nom || doc.clientNom || '') + NL;
+    if (doc.ref) body += 'Ref : ' + encodeURIComponent(doc.ref) + NL;
+    body += NL + '--- ARTICLES ---' + NL;
+    lignes.forEach(function(l) {
+        const pu = (l.prixUnitaireRemise || l.prixUnitaire || 0).toFixed(2).replace('.',',');
+        const tot = (l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0)).toFixed(2).replace('.',',');
+        body += NL + encodeURIComponent('Ref: ' + (l.reference||'') + ' - ' + (l.designation||'')) + NL;
+        if (l.ean) body += encodeURIComponent('  EAN13: ' + l.ean) + NL;
+        const puBrut = (l.prixUnitaire || 0).toFixed(2).replace('.',',');
+        if (l.remiseLigne > 0) {
+            body += encodeURIComponent('  P.U. brut: ' + puBrut + ' EUR  Remise: -' + l.remiseLigne + '%  P.U. net: ' + pu + ' EUR') + NL;
+        }
+        body += encodeURIComponent('  Qte: ' + l.quantite + ' x ' + pu + ' EUR = ' + tot + ' EUR HT') + NL;
+    });
+    body += NL + '--- TOTAUX ---' + NL;
+    if (doc.remiseGlobale > 0) {
+        body += encodeURIComponent('Avant remise: ' + (doc.totalAvantRemise||0).toFixed(2).replace('.',',') + ' EUR') + NL;
+        body += encodeURIComponent('Remise -' + doc.remiseGlobale + '%: -' + (doc.montantRemiseGlobale||0).toFixed(2).replace('.',',') + ' EUR') + NL;
+    }
+    body += encodeURIComponent('Total HT : ' + (doc.totalHT||0).toFixed(2).replace('.',',') + ' EUR') + NL;
+    body += encodeURIComponent('TVA 20% : ' + (doc.totalTVA||0).toFixed(2).replace('.',',') + ' EUR') + NL;
+    body += encodeURIComponent('Total TTC : ' + (doc.totalTTC||0).toFixed(2).replace('.',',') + ' EUR') + NL;
+    if (doc.conditionsPaiement || client.conditionsPaiement) {
+        body += NL + encodeURIComponent('Conditions : ' + (doc.conditionsPaiement || client.conditionsPaiement || '')) + NL;
+    }
+    body += NL + encodeURIComponent('Cordialement,') + NL;
+    body += encodeURIComponent('NSA Developpement - NO AGE Beach & Casual Wear') + NL;
+    body += encodeURIComponent('116 Bd de la Pomme - 13011 Marseille') + NL;
+    body += encodeURIComponent('Tel: 0496199002') + NL;
+
+    const sujet = encodeURIComponent(type + ' N ' + (doc.numero||'') + ' - NSA Developpement');
+    const mailto = 'mailto:' + encodeURIComponent(email) + '?subject=' + sujet + '&body=' + body;
+    window.location.href = mailto;
+}
+
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer = null;
+function toast(msg, type) {
+    const el = document.getElementById('toast-msg');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.background = type === 'error' ? '#ef4444'
+        : type === 'warn' ? '#f59e0b'
+        : type === 'success' ? '#10b981'
+        : '#1e293b';
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// DÉMARRAGE
+// ============================================================
+init().catch(e => console.error('Init error:', e));
+</script>
+<!-- HTML5-QRCODE READER -->
+<div id="html5qr-reader" style="display:none;position:fixed;inset:0;z-index:998;background:#000;"></div>
+
+</body>
+</html>

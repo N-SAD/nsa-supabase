@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "functions": {
+    "api/data.js": { "maxDuration": 30 }
+  },
+  "routes": [
+    { "src": "/api/login", "dest": "/api/data.js?action=login" },
+    { "src": "/api/ping", "dest": "/api/data.js?action=ping" },
+    { "src": "/api/import/([^/]+)", "dest": "/api/data.js?action=import&store=$1" },
+    { "src": "/api/export/([^/]+)", "dest": "/api/data.js?action=export&store=$1" },
+    { "src": "/api/mobile/([^/]+)", "dest": "/api/data.js?action=mobile&store=$1" },
+    { "src": "/mobile", "dest": "/erp-mobile-commande.html" },
+    { "src": "/", "dest": "/api/data.js?action=ping" }
+  ]
+}
