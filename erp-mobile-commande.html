@@ -266,9 +266,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button class="qty-btn" onclick="changeQty(1)">＋</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne</label>
-          <button onclick="saisirRemiseLigne()" id="btn-remise-ligne" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;min-width:70px;">0 %</button>
-          <input type="hidden" id="inp-remise-ligne" value="0">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
+          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -284,8 +283,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <!-- Remise globale -->
         <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:6px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
-          <button onclick="saisirRemiseGlobale()" id="btn-remise-globale" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;cursor:pointer;min-width:70px;">0 %</button>
-          <input type="hidden" id="inp-remise-globale" value="0">
+          <input type="number" id="inp-remise-globale" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="renderPanier()" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
           <span id="total-remise" style="font-size:12px;color:var(--danger);margin-left:auto;"></span>
         </div>
         <div class="total-bar">
@@ -551,7 +549,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 <div id="modal-remise" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:16px;width:280px;padding:24px;text-align:center;">
     <div style="font-size:16px;font-weight:700;color:var(--primary);margin-bottom:16px;" id="modal-remise-titre">Remise (%)</div>
-    <input type="tel" id="modal-remise-input" placeholder="0" style="width:100%;padding:14px;border:2px solid var(--primary);border-radius:10px;font-size:28px;font-weight:900;text-align:center;margin-bottom:16px;" autofocus onkeydown="if(event.key==='Enter')confirmerRemise()">
+    <input type="number" id="modal-remise-input" placeholder="0" min="0" max="100" step="0.5" inputmode="decimal" style="width:100%;padding:14px;border:2px solid var(--primary);border-radius:10px;font-size:28px;font-weight:900;text-align:center;margin-bottom:16px;" onkeydown="if(event.key==='Enter')confirmerRemise()">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <button onclick="annulerRemise()" style="background:#f1f5f9;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">Annuler</button>
       <button onclick="confirmerRemise()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">OK ✓</button>
@@ -1022,8 +1020,6 @@ function ajouterAuPanier() {
     }
     // Reset remise ligne
     document.getElementById('inp-remise-ligne').value = '0';
-    const btnRemise = document.getElementById('btn-remise-ligne');
-    if (btnRemise) { btnRemise.textContent = '0 %'; btnRemise.style.background = '#f1f5f9'; }
     // Vider le champ EAN pour le prochain scan
     const inpEan = document.getElementById('inp-ean');
     if (inpEan) { inpEan.value = ''; inpEan.focus(); }
@@ -1101,9 +1097,11 @@ function ouvrirModalRemise(titre, valActuelle, callback) {
     remiseCallback = callback;
     document.getElementById('modal-remise-titre').textContent = titre;
     const inp = document.getElementById('modal-remise-input');
-    inp.value = valActuelle || '0';
+    inp.value = valActuelle || '';
     document.getElementById('modal-remise').style.display = 'flex';
-    setTimeout(() => { inp.focus(); inp.select(); }, 100);
+    // Focus immédiat sans setTimeout - requis par Safari iOS
+    inp.focus();
+    inp.select();
 }
 
 function confirmerRemise() {
@@ -1279,8 +1277,6 @@ async function validerCommande() {
         if (zoneQty) zoneQty.style.display = 'none';
         const inpRemise = document.getElementById('inp-remise-globale');
         if (inpRemise) inpRemise.value = '0';
-        const btnRemGlob = document.getElementById('btn-remise-globale');
-        if (btnRemGlob) { btnRemGlob.textContent = '0 %'; btnRemGlob.style.background = '#f1f5f9'; }
         const inpDate = document.getElementById('inp-date-livraison');
         if (inpDate) inpDate.value = '';
         const btnType = document.getElementById('btn-cmd');
