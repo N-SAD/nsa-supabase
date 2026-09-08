@@ -267,7 +267,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
-          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="mettreAJourPrixRemise()" onclick="this.select()">
+          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="validerRemiseLigne(this)" onclick="this.select()" onkeydown="bloquerScanRemise(event)">
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -1086,6 +1086,29 @@ function renderPanier() {
 
     const ttcEl = document.getElementById('total-ttc');
     if (ttcEl) ttcEl.textContent = totalTTC.toFixed(2).replace('.',',') + ' €';
+}
+
+function bloquerScanRemise(event) {
+    // Si Enter → empêcher la validation et repasser au champ EAN
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById('inp-ean').focus();
+    }
+}
+
+function validerRemiseLigne(el) {
+    // Si la valeur dépasse 100 ou contient un long nombre → c'est un scan EAN
+    const val = parseFloat(el.value);
+    if (el.value.length > 3 || val > 100 || val < 0) {
+        el.value = 0; // Remettre à 0
+        // Rediriger vers le champ EAN
+        const eanVal = el.value;
+        el.value = 0;
+        document.getElementById('inp-ean').focus();
+        return;
+    }
+    mettreAJourPrixRemise();
 }
 
 function mettreAJourPrixRemise() {
