@@ -10,6 +10,7 @@
     { "src": "/api/export/([^/]+)", "dest": "/api/data.js?action=export&store=$1" },
     { "src": "/api/mobile/([^/]+)", "dest": "/api/data.js?action=mobile&store=$1" },
     { "src": "/mobile", "dest": "/erp-mobile-commande.html" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/", "dest": "/api/data.js?action=ping" }
   ]
 }

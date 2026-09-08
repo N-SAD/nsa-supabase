@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NSA ERP">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1e3a5f">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="manifest" href="/manifest.json>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>NSA — Prise de commande</title>
@@ -260,7 +267,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
-          <input type="text" inputmode="decimal" id="inp-remise-ligne" value="0" placeholder="0" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="mettreAJourPrixRemise()" onclick="this.select()">
+          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="mettreAJourPrixRemise()" onclick="this.select()">
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -276,7 +283,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <!-- Remise globale -->
         <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:6px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
-          <input type="text" inputmode="decimal" id="inp-remise-globale" value="0" placeholder="0" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="renderPanier()" onclick="this.select()">
+          <input type="number" id="inp-remise-globale" value="0" min="0" max="100" step="0.5" inputmode="decimal" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;" oninput="renderPanier()" onclick="this.select()">
           <span id="total-remise" style="font-size:12px;color:var(--danger);margin-left:auto;"></span>
         </div>
         <div class="total-bar">
@@ -526,7 +533,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- Remise globale -->
     <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);margin-top:8px;">
       <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise globale (%)</label>
-      <input type="text" inputmode="decimal" id="doc-remise-globale" placeholder="0" onclick="this.select()" oninput="rafraichirLignesDoc()" style="width:60px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;">
+      <input type="number" id="doc-remise-globale" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="rafraichirLignesDoc()" style="width:60px;padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;">
       <span id="modal-doc-remise-affichage" style="font-size:12px;color:#ef4444;font-weight:700;margin-left:auto;"></span>
     </div>
     <!-- Total -->
@@ -1337,7 +1344,7 @@ function rafraichirLignesDoc() {
                 + '<div style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (l.designation || '') + '</div>'
                 + '<div style="display:flex;align-items:center;gap:4px;margin-top:3px;">'
                 + '<span style="font-size:11px;color:var(--text-2);">Remise%</span>'
-                + '<input type="text" inputmode="decimal" value="' + (l.remiseLigne||0) + '" data-i="' + i + '" onchange="changerRemiseLigneDoc(parseInt(this.dataset.i),this.value)" onclick="this.select()" style="width:45px;padding:2px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;text-align:center;">'
+                + '<input type="number" min="0" max="100" step="0.5" inputmode="decimal" value="' + (l.remiseLigne||0) + '" data-i="' + i + '" onchange="changerRemiseLigneDoc(parseInt(this.dataset.i),this.value)" onclick="this.select()" style="width:45px;padding:2px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;text-align:center;">'
                 + '<span style="font-size:11px;color:var(--primary-light);font-weight:700;">' + total + ' €</span>'
                 + '</div>'
                 + '</div>'
@@ -1781,15 +1788,13 @@ async function syncDepuisServeur(store) {
 }
 
 async function envoyerToutesCommandesServeur() {
-    const res = document.getElementById('sync-result');
     if (!serveurToken) {
-        res.textContent = '❌ Connectez-vous au serveur dabord';
-        res.style.color = '#ef4444';
-        toast('❌ Non connecté au serveur', 'error');
+        toast('❌ Connectez-vous au serveur dabord (onglet Synchro)', 'error');
         return;
     }
-    res.textContent = '⏳ Envoi en cours...';
-    res.style.color = '#2563eb';
+    toast('⏳ Envoi en cours...', 'success');
+    const res = document.getElementById('sync-result');
+    if (res) { res.textContent = '⏳ Envoi en cours...'; res.style.color = '#2563eb'; }
     try {
         const cmds = await dbAll('commandes');
         const bls  = await dbAll('livraisons');
@@ -1826,12 +1831,11 @@ async function envoyerToutesCommandesServeur() {
             if (r.ok) { const d = await r.json(); nb += d.added + d.updated; }
         }
 
-        res.textContent = '✅ ' + nb + ' document(s) envoyé(s) au serveur';
-        res.style.color = '#10b981';
-        toast('✅ ' + nb + ' doc(s) envoyé(s)', 'success');
+        const msg = '✅ ' + nb + ' document(s) envoyé(s) au serveur';
+        if (res) { res.textContent = msg; res.style.color = '#10b981'; }
+        toast(msg, 'success');
     } catch(e) {
-        res.textContent = '❌ ' + e.message;
-        res.style.color = '#ef4444';
+        if (res) { res.textContent = '❌ ' + e.message; res.style.color = '#ef4444'; }
         toast('❌ ' + e.message, 'error');
     }
 }
