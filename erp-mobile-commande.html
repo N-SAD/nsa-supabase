@@ -208,9 +208,9 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
-            <div onclick="ouvrirListeClientsCommande()" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;background:white;display:flex;align-items:center;justify-content:space-between;">
-              <span id="client-selectionne-nom" style="color:var(--text-2);">-- Sélectionner un client --</span>
-              <span style="color:var(--text-2);">›</span>
+            <div onclick="ouvrirListeClientsCommande()" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;background:white;display:flex;align-items:center;justify-content:space-between;min-width:0;">
+              <span id="client-selectionne-nom" style="color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">-- Sélectionner un client --</span>
+              <button onclick="event.stopPropagation();viderClientCommande()" id="btn-vider-client" style="display:none;background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px;">✕</button>
             </div>
             <input type="hidden" id="sel-client" value="">
             <button onclick="ouvrirListeClientsCommande()" style="background:#eff6ff;color:#1e40af;border:1.5px solid #2563eb;border-radius:10px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Liste</button>
@@ -1486,6 +1486,8 @@ async function validerCommande() {
         if (selClient) selClient.value = '';
         const nomEl = document.getElementById('client-selectionne-nom');
         if (nomEl) { nomEl.textContent = '-- Sélectionner un client --'; nomEl.style.color = 'var(--text-2)'; nomEl.style.fontWeight = 'normal'; }
+        const btnVider = document.getElementById('btn-vider-client');
+        if (btnVider) btnVider.style.display = 'none';
         const zoneArt = document.getElementById('zone-article');
         if (zoneArt) zoneArt.innerHTML = '';
         const zoneQty = document.getElementById('zone-qty');
@@ -2090,6 +2092,10 @@ async function envoyerToutesCommandesServeur() {
         const devis = await dbAll('devis');
         let nb = 0;
 
+        // Debug
+        console.log('Commandes:', cmds.length, 'BL:', bls.length, 'Devis:', devis.length);
+        if (res) res.textContent = '⏳ Envoi: ' + cmds.length + ' cmd, ' + bls.length + ' BL, ' + devis.length + ' devis...';
+
         // Envoyer commandes
         if (cmds.length > 0) {
             const r = await fetch(SERVEUR_URL + '/api/import/commandes', {
@@ -2120,9 +2126,12 @@ async function envoyerToutesCommandesServeur() {
             if (r.ok) { const d = await r.json(); nb += d.added + d.updated; }
         }
 
-        const msg = '✅ ' + nb + ' document(s) envoyé(s) au serveur';
-        if (res) { res.textContent = msg; res.style.color = '#10b981'; }
-        toast(msg, 'success');
+        const total = cmds.length + bls.length + devis.length;
+        const msg = nb > 0
+            ? '✅ ' + nb + ' document(s) envoyé(s)'
+            : '⚠️ ' + total + ' doc(s) trouvé(s) mais 0 envoyé — vérifiez la connexion';
+        if (res) { res.textContent = msg; res.style.color = nb > 0 ? '#10b981' : '#f59e0b'; }
+        toast(msg, nb > 0 ? 'success' : 'warn');
     } catch(e) {
         if (res) { res.textContent = '❌ ' + e.message; res.style.color = '#ef4444'; }
         toast('❌ ' + e.message, 'error');
@@ -2784,7 +2793,6 @@ function filtrerClientsCommande() {
 function selectionnerClientCommande(id) {
     const cl = clients.find(c => c.id === id);
     if (!cl) return;
-    // Mettre à jour le champ caché et l'affichage
     document.getElementById('sel-client').value = id;
     const nomEl = document.getElementById('client-selectionne-nom');
     if (nomEl) {
@@ -2792,8 +2800,22 @@ function selectionnerClientCommande(id) {
         nomEl.style.color = 'var(--text)';
         nomEl.style.fontWeight = '600';
     }
+    const btnVider = document.getElementById('btn-vider-client');
+    if (btnVider) btnVider.style.display = '';
     fermerListeClientsCommande();
     toast('✅ Client : ' + cl.nom, 'success');
+}
+
+function viderClientCommande() {
+    document.getElementById('sel-client').value = '';
+    const nomEl = document.getElementById('client-selectionne-nom');
+    if (nomEl) {
+        nomEl.textContent = '-- Sélectionner un client --';
+        nomEl.style.color = 'var(--text-2)';
+        nomEl.style.fontWeight = 'normal';
+    }
+    const btnVider = document.getElementById('btn-vider-client');
+    if (btnVider) btnVider.style.display = 'none';
 }
 
 let ficheClientCourant = null;
@@ -2818,11 +2840,16 @@ async function ouvrirFicheClient(id) {
     const adr = [cl.adresse1||cl.adresse, cl.cp, cl.ville, cl.pays].filter(Boolean).join('<br>');
     document.getElementById('fiche-client-adresse').innerHTML = adr || '<span style="color:var(--text-2);">—</span>';
 
-    // Conditions
+    // Conditions — chercher dans tous les champs possibles
+    const condPaiement = cl.conditionsPaiement || cl.conditions || '';
+    const famille = cl.familleClient || cl.famille || '';
+    const remise = cl.remise || cl.remiseGlobale || '';
+    const tva = cl.tvaIntracom || cl.tva || '';
     const cond = [
-        cl.conditionsPaiement ? '<div>' + cl.conditionsPaiement + '</div>' : '',
-        cl.familleClient ? '<div style="margin-top:4px;font-size:11px;color:var(--text-2);">Famille: ' + cl.familleClient + '</div>' : '',
-        cl.remise ? '<div style="margin-top:4px;font-size:11px;color:#10b981;font-weight:700;">Remise: ' + cl.remise + '%</div>' : '',
+        condPaiement ? '<div style="font-weight:600;">' + condPaiement + '</div>' : '',
+        famille ? '<div style="margin-top:4px;font-size:11px;color:var(--text-2);">Famille: ' + famille + '</div>' : '',
+        remise ? '<div style="margin-top:4px;font-size:11px;color:#10b981;font-weight:700;">Remise: ' + remise + '%</div>' : '',
+        tva ? '<div style="margin-top:4px;font-size:11px;color:var(--text-2);">TVA: ' + tva + '</div>' : '',
     ].filter(Boolean).join('');
     document.getElementById('fiche-client-conditions').innerHTML = cond || '<span style="color:var(--text-2);">—</span>';
 
@@ -2854,25 +2881,33 @@ function fermerFicheClient() {
 
 function commandeDepuisFiche() {
     if (!ficheClientCourant) return;
+    const cl = ficheClientCourant;
     fermerFicheClient();
     goPage('commande');
-    // Présélectionner le client
     setTimeout(() => {
-        const sel = document.getElementById('sel-client');
-        if (sel) {
-            sel.value = ficheClientCourant.id;
-            // Déclencher l'événement change si besoin
-        }
+        selectionnerClientCommande(cl.id);
     }, 300);
 }
 
 function devisDepuisFiche() {
     if (!ficheClientCourant) return;
+    const cl = ficheClientCourant;
     fermerFicheClient();
     goPage('devis');
     setTimeout(() => {
         const sel = document.getElementById('sel-client-devis');
-        if (sel) sel.value = ficheClientCourant.id;
+        if (sel) {
+            sel.value = cl.id;
+            // Afficher le nom du client sélectionné
+            const opt = sel.querySelector(`option[value="${cl.id}"]`);
+            if (!opt) {
+                const o = document.createElement('option');
+                o.value = cl.id;
+                o.textContent = (cl.code ? '[' + cl.code + '] ' : '') + cl.nom;
+                sel.appendChild(o);
+                sel.value = cl.id;
+            }
+        }
     }, 300);
 }
 
@@ -2898,10 +2933,10 @@ async function ouvrirModifClient(id) {
     document.getElementById('mc-tel').value = cl.telephone || '';
     document.getElementById('mc-mobile').value = cl.mobile || '';
     document.getElementById('mc-email').value = cl.email || '';
-    document.getElementById('mc-conditions').value = cl.conditionsPaiement || '';
+    document.getElementById('mc-conditions').value = cl.conditionsPaiement || cl.conditions || '';
     document.getElementById('mc-famille').value = cl.familleClient || cl.famille || '';
     document.getElementById('mc-tva').value = cl.tvaIntracom || cl.tva || '';
-    document.getElementById('mc-remise').value = cl.remise || '';
+    document.getElementById('mc-remise').value = cl.remise || cl.remiseGlobale || '';
     document.getElementById('modal-modif-client').style.display = 'block';
 }
 
