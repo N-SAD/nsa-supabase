@@ -75,36 +75,71 @@ module.exports = async function handler(req, res) {
         const items = body[store] || body.items || [];
         let added = 0, updated = 0;
 
-        // Charger tous les existants pour éviter les doublons
-        const existants = await sb('GET', store, null, '?select=id,data,numero');
+        // Pour articles et clients : insérer sans vider (le client envoie par batch)
+        // La suppression est gérée par le paramètre ?reset=1
+        if (store === 'articles' || store === 'clients') {
+            // Vider seulement si demandé explicitement
+            if (req.query.reset === '1') {
+                try { await sb('DELETE', store, null, '?id=gte.0'); } catch(e) {}
+            }
 
-        for (const item of items) {
-            const numero = item.numero || null;
-            const refArticle = item.reference || null;
-            const codeClient = item.code || null;
+            // Préparer tous les objets à insérer
+            const toInsert = items.map(item => ({
+                data: item,
+                numero: item.numero || item.reference || item.code || null,
+                source: item.source || 'pc'
+            }));
+
+            // Insérer en une seule requête (bulk insert Supabase)
             try {
-                // Chercher un doublon existant
-                let existing = null;
-                if (numero) {
-                    existing = existants.find(x => x.numero === numero);
-                }
-                if (!existing && store === 'articles' && refArticle) {
-                    existing = existants.find(x => (x.data || {}).reference === refArticle);
-                }
-                if (!existing && store === 'clients' && codeClient) {
-                    existing = existants.find(x => (x.data || {}).code === codeClient);
-                }
-
-                if (existing) {
-                    await sb('PATCH', store, { data: item, numero, updated_at: new Date().toISOString() }, `?id=eq.${existing.id}`);
-                    updated++;
+                const url = `${SUPABASE_URL}/rest/v1/${store}`;
+                const r = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(toInsert)
+                });
+                if (r.ok) {
+                    added = toInsert.length;
                 } else {
-                    await sb('POST', store, { data: item, numero, source: item.source || 'pc' });
-                    added++;
-                    // Ajouter au cache local pour éviter doublons dans le même import
-                    existants.push({ id: Date.now(), data: item, numero });
+                    // Fallback : insérer par batch de 100
+                    const batchSize = 100;
+                    for (let i = 0; i < toInsert.length; i += batchSize) {
+                        const batch = toInsert.slice(i, i + batchSize);
+                        const r2 = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(batch)
+                        });
+                        if (r2.ok) added += batch.length;
+                    }
                 }
-            } catch(e) { console.error(e.message); }
+            } catch(e) { console.error('Bulk insert error:', e.message); }
+        } else {
+            // Pour commandes/devis/livraisons : vérifier par numéro
+            const existants = await sb('GET', store, null, '?select=id,numero&limit=10000');
+            for (const item of items) {
+                const numero = item.numero || null;
+                try {
+                    const existing = numero ? existants.find(x => x.numero === numero) : null;
+                    if (existing) {
+                        await sb('PATCH', store, { data: item, updated_at: new Date().toISOString() }, `?id=eq.${existing.id}`);
+                        updated++;
+                    } else {
+                        await sb('POST', store, { data: item, numero, source: item.source || 'mobile' });
+                        added++;
+                    }
+                } catch(e) { console.error(e.message); }
+            }
         }
         return res.json({ ok: true, added, updated });
     }
@@ -112,7 +147,7 @@ module.exports = async function handler(req, res) {
     // GET /api/export/:store
     if (action === 'export' && store) {
         if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
-        const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc');
+        const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc&limit=10000');
         const items = (rows || []).map(r => ({ ...(r.data || {}), _created: r.created_at }));
         return res.json({ store, [store]: items, count: items.length });
     }
@@ -124,7 +159,7 @@ module.exports = async function handler(req, res) {
             articles: ['reference','designation','descriptionCourte','codeBarres','categorie','composition','couleur','taille','prixAchat','prixVente','tva','conditionnement','stock','fournisseur'],
             clients: ['code','nom','contact','adresse1','cp','ville','telephone','email','conditionsPaiement','familleClient','remise'],
         };
-        const rows = await sb('GET', store, null, '?select=data&order=created_at.desc');
+        const rows = await sb('GET', store, null, '?select=data&order=created_at.desc&limit=10000');
         const champs = CHAMPS[store];
         const items = (rows || []).map((r, i) => {
             const d = r.data || {};
