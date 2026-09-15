@@ -150,7 +150,13 @@ module.exports = async function handler(req, res) {
     if (action === 'export' && store) {
         if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
         const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc&limit=10000');
-        const items = (rows || []).map(r => ({ ...(r.data || {}), _created: r.created_at }));
+        const items = (rows || []).map(r => {
+            // data peut être string ou objet selon Supabase
+            let d = r.data;
+            if (typeof d === 'string') { try { d = JSON.parse(d); } catch(e) { d = {}; } }
+            return { ...(d || {}), _created: r.created_at, _numero: r.numero, _source: r.source };
+        });
+        console.log('Export', store, ':', items.length, 'items');
         return res.json({ store, [store]: items, count: items.length });
     }
 
