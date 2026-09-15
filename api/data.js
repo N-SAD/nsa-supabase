@@ -125,20 +125,22 @@ module.exports = async function handler(req, res) {
                 }
             } catch(e) { console.error('Bulk insert error:', e.message); }
         } else {
-            // Pour commandes/devis/livraisons : vérifier par numéro
-            const existants = await sb('GET', store, null, '?select=id,numero&limit=10000');
+            // Pour commandes/devis/livraisons : insérer directement
             for (const item of items) {
                 const numero = item.numero || null;
                 try {
-                    const existing = numero ? existants.find(x => x.numero === numero) : null;
-                    if (existing) {
-                        await sb('PATCH', store, { data: item, updated_at: new Date().toISOString() }, `?id=eq.${existing.id}`);
-                        updated++;
-                    } else {
-                        await sb('POST', store, { data: item, numero, source: item.source || 'mobile' });
-                        added++;
-                    }
-                } catch(e) { console.error(e.message); }
+                    await sb('POST', store, { data: item, numero, source: item.source || 'mobile' });
+                    added++;
+                } catch(e) {
+                    // Si doublon sur numéro, mettre à jour
+                    try {
+                        const ex = await sb('GET', store, null, `?numero=eq.${encodeURIComponent(numero)}&select=id`);
+                        if (ex && ex.length > 0) {
+                            await sb('PATCH', store, { data: item, updated_at: new Date().toISOString() }, `?id=eq.${ex[0].id}`);
+                            updated++;
+                        }
+                    } catch(e2) { console.error(e2.message); }
+                }
             }
         }
         return res.json({ ok: true, added, updated });
