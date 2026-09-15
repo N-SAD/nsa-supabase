@@ -75,10 +75,13 @@ module.exports = async function handler(req, res) {
         const items = body[store] || body.items || [];
         let added = 0, updated = 0;
 
-        // Pour articles et clients : vider TOUT puis insérer en masse
+        // Pour articles et clients : insérer sans vider (le client envoie par batch)
+        // La suppression est gérée par le paramètre ?reset=1
         if (store === 'articles' || store === 'clients') {
-            // Vider complètement le store
-            try { await sb('DELETE', store, null, '?id=gte.0'); } catch(e) {}
+            // Vider seulement si demandé explicitement
+            if (req.query.reset === '1') {
+                try { await sb('DELETE', store, null, '?id=gte.0'); } catch(e) {}
+            }
 
             // Préparer tous les objets à insérer
             const toInsert = items.map(item => ({
