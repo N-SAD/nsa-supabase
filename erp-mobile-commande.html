@@ -208,7 +208,12 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
-            <select id="sel-client" style="flex:1;"><option value="">-- Sélectionner --</option></select>
+            <div onclick="ouvrirListeClientsCommande()" style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;background:white;display:flex;align-items:center;justify-content:space-between;">
+              <span id="client-selectionne-nom" style="color:var(--text-2);">-- Sélectionner un client --</span>
+              <span style="color:var(--text-2);">›</span>
+            </div>
+            <input type="hidden" id="sel-client" value="">
+            <button onclick="ouvrirListeClientsCommande()" style="background:#eff6ff;color:#1e40af;border:1.5px solid #2563eb;border-radius:10px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Liste</button>
             <button onclick="ouvrirNouveauClient()" style="background:var(--primary-light);color:white;border:none;border-radius:10px;padding:0 14px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Nouveau client">➕</button>
           </div>
         </div>
@@ -316,8 +321,26 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- PAGE : ARTICLES -->
     <div class="page" id="pg-articles">
       <div class="card">
-        <div class="card-title">📦 Articles</div>
-        <input type="text" id="search-articles" placeholder="🔍 Rechercher..." oninput="filtrerArticlesMobile()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-title" style="margin-bottom:0;">📦 Articles</div>
+          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">🏠</button>
+        </div>
+        <!-- Recherche -->
+        <input type="text" id="search-articles" placeholder="🔍 Référence, désignation, EAN..." oninput="filtrerArticlesMobile()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:8px;">
+        <!-- Filtres -->
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <select id="filtre-famille-articles" onchange="filtrerArticlesMobile()" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;">
+            <option value="">Toutes familles</option>
+          </select>
+          <select id="tri-articles" onchange="filtrerArticlesMobile()" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;">
+            <option value="ref-asc">Réf ↑</option>
+            <option value="ref-desc">Réf ↓</option>
+            <option value="prix-asc">Prix ↑</option>
+            <option value="prix-desc">Prix ↓</option>
+            <option value="stock-desc">Stock ↓</option>
+          </select>
+        </div>
+        <div id="articles-count" style="font-size:11px;color:var(--text-2);margin-bottom:6px;"></div>
         <div id="liste-articles-mobile" style="font-size:13px;"></div>
       </div>
     </div>
@@ -557,42 +580,196 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
   </div>
 </div>
 
+<!-- MODAL LISTE CLIENTS COMMANDE -->
+<div id="modal-liste-clients-cmd" style="display:none;position:fixed;inset:0;background:white;z-index:1000;overflow-y:auto;">
+  <!-- Header sticky -->
+  <div style="background:#1e3a5f;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;">
+    <button onclick="fermerListeClientsCommande()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;">✕</button>
+    <div style="font-size:15px;font-weight:700;color:white;flex:1;text-align:center;">Sélectionner un client</div>
+    <div style="width:36px;"></div>
+  </div>
+
+  <!-- Recherche -->
+  <div style="padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:64px;background:white;z-index:9;">
+    <input type="text" id="search-clients-cmd" placeholder="🔍 Nom, code client, département..." 
+      style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;"
+      oninput="filtrerClientsCommande()" autocomplete="off" autocorrect="off">
+    <div id="clients-cmd-count" style="font-size:11px;color:var(--text-2);margin-top:6px;text-align:right;"></div>
+  </div>
+
+  <!-- Liste -->
+  <div id="liste-clients-cmd" style="padding:0 16px;"></div>
+</div>
+
+<!-- MODAL FICHE CLIENT -->
+<div id="modal-fiche-client" style="display:none;position:fixed;inset:0;background:white;z-index:1000;overflow-y:auto;">
+  <!-- Header -->
+  <div style="background:#1e3a5f;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;">
+    <button onclick="fermerFicheClient()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;">←</button>
+    <div style="flex:1;text-align:center;">
+      <div style="font-size:13px;color:rgba(255,255,255,0.7);">Clients</div>
+      <div style="font-size:15px;font-weight:700;color:white;" id="fiche-client-sous-titre"></div>
+    </div>
+    <button onclick="ouvrirModifClientDepuisFiche()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:16px;cursor:pointer;">✏️</button>
+  </div>
+
+  <!-- Titre client -->
+  <div style="background:#f8fafc;padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+    <div style="width:48px;height:48px;border-radius:50%;background:#1e3a5f;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>
+    <div>
+      <div style="font-size:18px;font-weight:900;color:var(--primary);" id="fiche-client-titre"></div>
+    </div>
+  </div>
+
+  <!-- Boutons actions -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-bottom:16px;">
+    <button onclick="commandeDepuisFiche()" style="background:#10b981;color:white;border:none;padding:16px;font-size:14px;font-weight:700;cursor:pointer;">🛒 Prendre une commande</button>
+    <button onclick="devisDepuisFiche()" style="background:#2563eb;color:white;border:none;padding:16px;font-size:14px;font-weight:700;cursor:pointer;">📝 Créer un devis</button>
+  </div>
+
+  <!-- Infos contact -->
+  <div style="background:white;border-radius:12px;margin:0 12px 12px;border:1px solid var(--border);overflow:hidden;">
+    <div id="fiche-client-contact"></div>
+  </div>
+
+  <!-- Adresses -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 12px 12px;">
+    <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">ADRESSE</div>
+      <div style="font-size:13px;" id="fiche-client-adresse"></div>
+    </div>
+    <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">CONDITIONS</div>
+      <div style="font-size:13px;" id="fiche-client-conditions"></div>
+    </div>
+  </div>
+
+  <!-- Historique commandes client -->
+  <div style="background:white;border-radius:12px;margin:0 12px 20px;border:1px solid var(--border);padding:14px;">
+    <div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:10px;">DERNIÈRES COMMANDES</div>
+    <div id="fiche-client-commandes" style="font-size:13px;"></div>
+  </div>
+</div>
+
 <!-- MODAL MODIFIER CLIENT -->
-<div id="modal-modif-client" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:flex-end;justify-content:center;">
-  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-size:16px;font-weight:700;color:var(--primary);">✏️ Modifier le client</div>
-      <button onclick="fermerModifClient()" style="background:#f1f5f9;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;">✕</button>
+<div id="modal-modif-client" style="display:none;position:fixed;inset:0;background:white;z-index:1001;overflow-y:auto;">
+  <!-- Header sticky -->
+  <div style="background:#f8fafc;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);">
+    <button onclick="fermerModifClient()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--primary);">←</button>
+    <div style="font-size:16px;font-weight:700;" id="mc-titre-modal">Modifier client</div>
+    <button onclick="sauvegarderModifClient()" style="background:none;border:none;font-size:13px;font-weight:700;color:#10b981;cursor:pointer;">✅ Ok</button>
+  </div>
+
+  <input type="hidden" id="mc-id">
+
+  <!-- Siret -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Siret</div>
+    <input type="text" id="mc-siret" inputmode="numeric" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Entrez le SIRET">
+  </div>
+
+  <!-- Nom -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="flex:1;">
+      <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Nom *</div>
+      <input type="text" id="mc-nom" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Raison sociale">
     </div>
-    <input type="hidden" id="mc-id">
-    <div class="field"><label>Code client</label><input type="text" id="mc-code" style="text-transform:uppercase;"></div>
-    <div class="field"><label>Raison sociale *</label><input type="text" id="mc-nom" placeholder="Nom de la société..."></div>
-    <div class="field"><label>Contact</label><input type="text" id="mc-contact" placeholder="Nom du contact..."></div>
-    <div class="field"><label>Adresse</label><input type="text" id="mc-adresse" placeholder="Adresse..."></div>
-    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;">
-      <div class="field"><label>Code postal</label><input type="text" id="mc-cp" inputmode="numeric"></div>
-      <div class="field"><label>Ville</label><input type="text" id="mc-ville"></div>
+  </div>
+
+  <!-- Code -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Code client</div>
+    <input type="text" id="mc-code" style="width:100%;border:none;font-size:15px;outline:none;text-transform:uppercase;" placeholder="Code">
+  </div>
+
+  <!-- Contact -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Contact</div>
+    <input type="text" id="mc-contact" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Nom du contact">
+  </div>
+
+  <!-- Téléphone -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Téléphone</div>
+    <input type="tel" id="mc-tel" inputmode="tel" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Téléphone fixe">
+  </div>
+
+  <!-- Mobile -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Mobile</div>
+    <input type="tel" id="mc-mobile" inputmode="tel" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Téléphone mobile">
+  </div>
+
+  <!-- Email -->
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">E-mail</div>
+    <input type="email" id="mc-email" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="adresse@email.com">
+  </div>
+
+  <!-- Section Adresse facturation -->
+  <div style="background:#f8fafc;padding:12px 16px;font-size:13px;font-weight:700;color:var(--text);">Adresse de facturation</div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Rue</div>
+    <input type="text" id="mc-adresse" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Adresse">
+  </div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Adresse 2</div>
+    <input type="text" id="mc-adresse2" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Complément d'adresse">
+  </div>
+
+  <div style="display:grid;grid-template-columns:120px 1fr;border-bottom:1px solid var(--border);">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Code postal</div>
+      <input type="text" id="mc-cp" inputmode="numeric" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="CP">
     </div>
-    <div class="field"><label>Téléphone</label><input type="tel" id="mc-tel" inputmode="tel"></div>
-    <div class="field"><label>Email</label><input type="email" id="mc-email"></div>
-    <div class="field"><label>Conditions de paiement</label>
-      <select id="mc-conditions">
-        <option value="">-- Choisir --</option>
-        <option>Comptant</option>
-        <option>30 jours</option>
-        <option>45 jours</option>
-        <option>60 jours</option>
-        <option>60 jours fin de mois</option>
-        <option>VIRT CM-CIC FACTOR 30 JOURS</option>
-        <option>VIRT CM-CIC FACTOR 60 JOURS</option>
-      </select>
+    <div style="padding:14px 16px;">
+      <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Ville</div>
+      <input type="text" id="mc-ville" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Ville">
     </div>
-    <div class="field"><label>Famille client</label><input type="text" id="mc-famille"></div>
-    <div class="field"><label>N° TVA intracommunautaire</label><input type="text" id="mc-tva"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-      <button onclick="fermerModifClient()" style="background:#f1f5f9;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
-      <button onclick="sauvegarderModifClient()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">💾 Sauvegarder</button>
-    </div>
+  </div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Pays</div>
+    <input type="text" id="mc-pays" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="France" value="France">
+  </div>
+
+  <!-- Section Conditions -->
+  <div style="background:#f8fafc;padding:12px 16px;font-size:13px;font-weight:700;color:var(--text);">Conditions commerciales</div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Conditions de paiement</div>
+    <select id="mc-conditions" style="width:100%;border:none;font-size:15px;outline:none;background:none;">
+      <option value="">-- Choisir --</option>
+      <option>Comptant</option>
+      <option>30 jours</option>
+      <option>45 jours</option>
+      <option>60 jours</option>
+      <option>60 jours fin de mois</option>
+      <option>VIRT CM-CIC FACTOR 30 JOURS</option>
+      <option>VIRT CM-CIC FACTOR 60 JOURS</option>
+    </select>
+  </div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Famille client</div>
+    <input type="text" id="mc-famille" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Famille">
+  </div>
+
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">N° TVA intracommunautaire</div>
+    <input type="text" id="mc-tva" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="FR00000000000">
+  </div>
+
+  <div style="padding:14px 16px;margin-bottom:30px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Remise (%)</div>
+    <input type="number" id="mc-remise" inputmode="decimal" min="0" max="100" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="0">
+  </div>
+
+  <!-- Bouton sauvegarder en bas -->
+  <div style="padding:16px;border-top:1px solid var(--border);position:sticky;bottom:0;background:white;">
+    <button onclick="sauvegarderModifClient()" style="width:100%;background:#10b981;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;">💾 Sauvegarder</button>
   </div>
 </div>
 
@@ -810,41 +987,76 @@ async function chargerArticlesMobile() {
         el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">Aucun article — synchronisez depuis le serveur</p>';
         return;
     }
-    el.innerHTML = arts.map(a => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
-        + '<div style="flex:1;">'
+
+    // Remplir le select familles
+    const selFamille = document.getElementById('filtre-famille-articles');
+    if (selFamille) {
+        const familles = [...new Set(arts.map(a => a.categorie || a.famille || '').filter(Boolean))].sort();
+        selFamille.innerHTML = '<option value="">Toutes familles</option>'
+            + familles.map(f => `<option value="${f}">${f}</option>`).join('');
+    }
+
+    el.dataset.all = JSON.stringify(arts);
+    filtrerArticlesMobile();
+}
+
+function renderArticlesMobileList(arts) {
+    return arts.map(a => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+        + '<div style="flex:1;min-width:0;">'
         + '<div style="font-size:13px;font-weight:700;">' + (a.reference||'') + '</div>'
-        + '<div style="font-size:11px;color:var(--text-2);">' + (a.designation||a.descriptionCourte||'') + '</div>'
-        + '<div style="font-size:11px;color:var(--primary-light);font-weight:700;">' + (parseFloat(a.prixVente)||0).toFixed(2).replace('.',',') + ' € HT</div>'
+        + '<div style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (a.designation||a.descriptionCourte||'') + '</div>'
+        + (a.categorie ? '<div style="font-size:10px;background:#eff6ff;color:#1e40af;border-radius:4px;padding:1px 6px;display:inline-block;margin-top:2px;">' + a.categorie + '</div>' : '')
         + '</div>'
-        + '<div style="font-size:11px;text-align:right;">'
-        + '<div style="background:#f0fdf4;color:#065f46;border-radius:6px;padding:2px 8px;font-weight:700;">Stock: ' + (a.stock||0) + '</div>'
+        + '<div style="text-align:right;flex-shrink:0;">'
+        + '<div style="font-size:12px;font-weight:700;color:var(--primary-light);">' + (parseFloat(a.prixVente)||0).toFixed(2).replace('.',',') + ' €</div>'
+        + '<div style="background:#f0fdf4;color:#065f46;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700;">Stock: ' + (a.stock||0) + '</div>'
         + '</div></div>'
     ).join('');
-    // Stocker pour filtrage
-    el.dataset.all = JSON.stringify(arts);
 }
 
 function filtrerArticlesMobile() {
-    const q = document.getElementById('search-articles').value.toLowerCase();
+    const q = (document.getElementById('search-articles')?.value || '').toLowerCase();
+    const famille = document.getElementById('filtre-famille-articles')?.value || '';
+    const tri = document.getElementById('tri-articles')?.value || 'ref-asc';
     const el = document.getElementById('liste-articles-mobile');
-    if (!el.dataset.all) return;
-    const arts = JSON.parse(el.dataset.all);
-    const filtered = arts.filter(a =>
-        (a.reference||'').toLowerCase().includes(q) ||
-        (a.designation||'').toLowerCase().includes(q) ||
-        (a.descriptionCourte||'').toLowerCase().includes(q) ||
-        (a.codeBarres||'').includes(q)
-    );
-    el.innerHTML = filtered.map(a => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
-        + '<div style="flex:1;">'
-        + '<div style="font-size:13px;font-weight:700;">' + (a.reference||'') + '</div>'
-        + '<div style="font-size:11px;color:var(--text-2);">' + (a.designation||a.descriptionCourte||'') + '</div>'
-        + '<div style="font-size:11px;color:var(--primary-light);font-weight:700;">' + (parseFloat(a.prixVente)||0).toFixed(2).replace('.',',') + ' € HT</div>'
-        + '</div>'
-        + '<div style="font-size:11px;">'
-        + '<div style="background:#f0fdf4;color:#065f46;border-radius:6px;padding:2px 8px;font-weight:700;">Stock: ' + (a.stock||0) + '</div>'
-        + '</div></div>'
-    ).join('');
+    if (!el || !el.dataset.all) return;
+
+    let arts = JSON.parse(el.dataset.all);
+
+    // Filtre recherche
+    if (q) {
+        arts = arts.filter(a =>
+            (a.reference||'').toLowerCase().includes(q) ||
+            (a.designation||'').toLowerCase().includes(q) ||
+            (a.descriptionCourte||'').toLowerCase().includes(q) ||
+            (a.codeBarres||'').includes(q)
+        );
+    }
+
+    // Filtre famille
+    if (famille) {
+        arts = arts.filter(a => (a.categorie||a.famille||'') === famille);
+    }
+
+    // Tri
+    arts.sort((a, b) => {
+        switch(tri) {
+            case 'ref-asc':  return (a.reference||'').localeCompare(b.reference||'');
+            case 'ref-desc': return (b.reference||'').localeCompare(a.reference||'');
+            case 'prix-asc': return (parseFloat(a.prixVente)||0) - (parseFloat(b.prixVente)||0);
+            case 'prix-desc': return (parseFloat(b.prixVente)||0) - (parseFloat(a.prixVente)||0);
+            case 'stock-desc': return (parseInt(b.stock)||0) - (parseInt(a.stock)||0);
+            default: return 0;
+        }
+    });
+
+    // Afficher le count
+    const countEl = document.getElementById('articles-count');
+    if (countEl) countEl.textContent = arts.length + ' article(s)';
+
+    el.innerHTML = arts.length === 0
+        ? '<p style="color:var(--text-2);text-align:center;padding:20px;">Aucun résultat</p>'
+        : renderArticlesMobileList(arts);
 }
 
 async function chargerClientsMobile() {
@@ -856,12 +1068,13 @@ async function chargerClientsMobile() {
         el.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:20px;">Aucun client — synchronisez depuis le serveur</p>';
         return;
     }
-    el.innerHTML = cls.map(c => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
+    el.innerHTML = cls.map(c => '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="ouvrirFicheClient(' + c.id + ')">'
         + '<div style="flex:1;">'
         + '<div style="font-size:13px;font-weight:700;">' + (c.code ? '['+c.code+'] ' : '') + (c.nom||'') + '</div>'
         + '<div style="font-size:11px;color:var(--text-2);">' + [c.ville, c.telephone].filter(Boolean).join(' · ') + '</div>'
         + '</div>'
-        + '<button data-id="' + c.id + '" onclick="ouvrirModifClient(parseInt(this.dataset.id))" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;flex-shrink:0;">✏️</button>'
+        + '<button data-id="' + c.id + '" onclick="event.stopPropagation();ouvrirModifClient(parseInt(this.dataset.id))" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;flex-shrink:0;">✏️</button>'
+        + '<span style="color:#94a3b8;font-size:16px;">›</span>'
         + '</div>'
     ).join('');
     el.dataset.all = JSON.stringify(cls);
@@ -1271,6 +1484,8 @@ async function validerCommande() {
         });
         const selClient = document.getElementById('sel-client');
         if (selClient) selClient.value = '';
+        const nomEl = document.getElementById('client-selectionne-nom');
+        if (nomEl) { nomEl.textContent = '-- Sélectionner un client --'; nomEl.style.color = 'var(--text-2)'; nomEl.style.fontWeight = 'normal'; }
         const zoneArt = document.getElementById('zone-article');
         if (zoneArt) zoneArt.innerHTML = '';
         const zoneQty = document.getElementById('zone-qty');
@@ -2509,22 +2724,185 @@ async function validerDevis() {
 // ============================================================
 // GESTION CLIENTS MOBILE
 // ============================================================
+// ============================================================
+// SÉLECTION CLIENT POUR COMMANDE
+// ============================================================
+function ouvrirListeClientsCommande() {
+    const modal = document.getElementById('modal-liste-clients-cmd');
+    modal.style.display = 'block';
+    document.getElementById('search-clients-cmd').value = '';
+    afficherClientsCommande(clients);
+    setTimeout(() => document.getElementById('search-clients-cmd').focus(), 100);
+}
+
+function fermerListeClientsCommande() {
+    document.getElementById('modal-liste-clients-cmd').style.display = 'none';
+}
+
+function afficherClientsCommande(liste) {
+    const el = document.getElementById('liste-clients-cmd');
+    const countEl = document.getElementById('clients-cmd-count');
+    if (!el) return;
+    countEl.textContent = liste.length + ' client(s)';
+    if (liste.length === 0) {
+        el.innerHTML = '<p style="text-align:center;color:var(--text-2);padding:30px;">Aucun client trouvé</p>';
+        return;
+    }
+    el.innerHTML = liste.map(c => {
+        const cp = c.cp || c.codePostal || '';
+        const dept = cp ? cp.substring(0, 2) : '';
+        return '<div onclick="selectionnerClientCommande(' + c.id + ')" style="padding:14px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;active:background:#f8fafc;">'
+            + '<div style="width:40px;height:40px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👤</div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="font-size:14px;font-weight:700;">' + (c.nom || '') + '</div>'
+            + '<div style="font-size:12px;color:var(--text-2);">'
+            + (c.code ? '<span style="background:#eff6ff;color:#1e40af;border-radius:4px;padding:1px 6px;font-weight:700;margin-right:6px;">' + c.code + '</span>' : '')
+            + (c.ville ? c.ville : '')
+            + (dept ? ' (' + dept + ')' : '')
+            + '</div>'
+            + '</div>'
+            + '<span style="color:var(--text-2);font-size:18px;">›</span>'
+            + '</div>';
+    }).join('');
+}
+
+function filtrerClientsCommande() {
+    const q = document.getElementById('search-clients-cmd').value.toLowerCase().trim();
+    if (!q) { afficherClientsCommande(clients); return; }
+    const filtered = clients.filter(c => {
+        const cp = c.cp || c.codePostal || '';
+        const dept = cp.substring(0, 2);
+        return (c.nom || '').toLowerCase().includes(q)
+            || (c.code || '').toLowerCase().includes(q)
+            || (c.ville || '').toLowerCase().includes(q)
+            || dept.includes(q)
+            || cp.includes(q);
+    });
+    afficherClientsCommande(filtered);
+}
+
+function selectionnerClientCommande(id) {
+    const cl = clients.find(c => c.id === id);
+    if (!cl) return;
+    // Mettre à jour le champ caché et l'affichage
+    document.getElementById('sel-client').value = id;
+    const nomEl = document.getElementById('client-selectionne-nom');
+    if (nomEl) {
+        nomEl.textContent = (cl.code ? '[' + cl.code + '] ' : '') + cl.nom;
+        nomEl.style.color = 'var(--text)';
+        nomEl.style.fontWeight = '600';
+    }
+    fermerListeClientsCommande();
+    toast('✅ Client : ' + cl.nom, 'success');
+}
+
+let ficheClientCourant = null;
+
+async function ouvrirFicheClient(id) {
+    const cl = clients.find(c => c.id === id);
+    if (!cl) { toast('Client introuvable', 'warn'); return; }
+    ficheClientCourant = cl;
+
+    // Header
+    document.getElementById('fiche-client-sous-titre').textContent = cl.code || '';
+    document.getElementById('fiche-client-titre').textContent = (cl.code ? cl.code + ' - ' : '') + (cl.nom || '');
+
+    // Contact
+    const lignesContact = [];
+    if (cl.contact) lignesContact.push('<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);"><span style="font-size:20px;">👤</span><span style="font-size:14px;">' + cl.contact + '</span></div>');
+    if (cl.telephone) lignesContact.push('<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);"><span style="font-size:20px;">📞</span><a href="tel:' + cl.telephone + '" style="font-size:14px;color:#2563eb;text-decoration:none;">' + cl.telephone + '</a></div>');
+    if (cl.email) lignesContact.push('<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;"><span style="font-size:20px;">✉️</span><a href="mailto:' + cl.email + '" style="font-size:14px;color:#2563eb;text-decoration:none;">' + cl.email + '</a></div>');
+    document.getElementById('fiche-client-contact').innerHTML = lignesContact.join('') || '<div style="padding:12px 16px;color:var(--text-2);font-size:13px;">Aucun contact renseigné</div>';
+
+    // Adresse
+    const adr = [cl.adresse1||cl.adresse, cl.cp, cl.ville, cl.pays].filter(Boolean).join('<br>');
+    document.getElementById('fiche-client-adresse').innerHTML = adr || '<span style="color:var(--text-2);">—</span>';
+
+    // Conditions
+    const cond = [
+        cl.conditionsPaiement ? '<div>' + cl.conditionsPaiement + '</div>' : '',
+        cl.familleClient ? '<div style="margin-top:4px;font-size:11px;color:var(--text-2);">Famille: ' + cl.familleClient + '</div>' : '',
+        cl.remise ? '<div style="margin-top:4px;font-size:11px;color:#10b981;font-weight:700;">Remise: ' + cl.remise + '%</div>' : '',
+    ].filter(Boolean).join('');
+    document.getElementById('fiche-client-conditions').innerHTML = cond || '<span style="color:var(--text-2);">—</span>';
+
+    // Dernières commandes
+    const cmds = await dbAll('commandes');
+    const cmdClient = cmds.filter(c => c.clientId == id || c.clientNom === cl.nom)
+        .sort((a,b) => (b.dateCreation||'').localeCompare(a.dateCreation||''))
+        .slice(0, 5);
+    const cmdEl = document.getElementById('fiche-client-commandes');
+    if (cmdClient.length === 0) {
+        cmdEl.innerHTML = '<div style="color:var(--text-2);font-size:12px;text-align:center;padding:10px;">Aucune commande</div>';
+    } else {
+        cmdEl.innerHTML = cmdClient.map(c => {
+            const date = c.dateCreation ? new Date(c.dateCreation).toLocaleDateString('fr-FR') : '-';
+            return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
+                + '<div><div style="font-weight:700;">' + (c.numero||'—') + '</div><div style="font-size:11px;color:var(--text-2);">' + date + '</div></div>'
+                + '<div style="text-align:right;font-weight:700;color:var(--primary-light);">' + (c.totalHT||0).toFixed(2).replace('.',',') + ' €</div>'
+                + '</div>';
+        }).join('');
+    }
+
+    document.getElementById('modal-fiche-client').style.display = 'block';
+}
+
+function fermerFicheClient() {
+    document.getElementById('modal-fiche-client').style.display = 'none';
+    ficheClientCourant = null;
+}
+
+function commandeDepuisFiche() {
+    if (!ficheClientCourant) return;
+    fermerFicheClient();
+    goPage('commande');
+    // Présélectionner le client
+    setTimeout(() => {
+        const sel = document.getElementById('sel-client');
+        if (sel) {
+            sel.value = ficheClientCourant.id;
+            // Déclencher l'événement change si besoin
+        }
+    }, 300);
+}
+
+function devisDepuisFiche() {
+    if (!ficheClientCourant) return;
+    fermerFicheClient();
+    goPage('devis');
+    setTimeout(() => {
+        const sel = document.getElementById('sel-client-devis');
+        if (sel) sel.value = ficheClientCourant.id;
+    }, 300);
+}
+
+function ouvrirModifClientDepuisFiche() {
+    if (!ficheClientCourant) return;
+    ouvrirModifClient(ficheClientCourant.id);
+}
+
 async function ouvrirModifClient(id) {
     const cl = clients.find(c => c.id === id);
     if (!cl) { toast('Client introuvable', 'warn'); return; }
     document.getElementById('mc-id').value = id;
+    document.getElementById('mc-titre-modal').textContent = 'Modifier — ' + (cl.nom || '');
+    document.getElementById('mc-siret').value = cl.siret || '';
     document.getElementById('mc-code').value = cl.code || cl.codeClient || '';
     document.getElementById('mc-nom').value = cl.nom || '';
     document.getElementById('mc-contact').value = cl.contact || '';
     document.getElementById('mc-adresse').value = cl.adresse || cl.adresse1 || '';
+    document.getElementById('mc-adresse2').value = cl.adresse2 || '';
     document.getElementById('mc-cp').value = cl.cp || cl.codePostal || '';
     document.getElementById('mc-ville').value = cl.ville || '';
+    document.getElementById('mc-pays').value = cl.pays || 'France';
     document.getElementById('mc-tel').value = cl.telephone || '';
+    document.getElementById('mc-mobile').value = cl.mobile || '';
     document.getElementById('mc-email').value = cl.email || '';
     document.getElementById('mc-conditions').value = cl.conditionsPaiement || '';
     document.getElementById('mc-famille').value = cl.familleClient || cl.famille || '';
     document.getElementById('mc-tva').value = cl.tvaIntracom || cl.tva || '';
-    document.getElementById('modal-modif-client').style.display = 'flex';
+    document.getElementById('mc-remise').value = cl.remise || '';
+    document.getElementById('modal-modif-client').style.display = 'block';
 }
 
 function fermerModifClient() {
@@ -2539,17 +2917,24 @@ async function sauvegarderModifClient() {
     if (idx < 0) { toast('Client introuvable', 'warn'); return; }
     clients[idx] = {
         ...clients[idx],
+        siret: document.getElementById('mc-siret').value.trim(),
         code: document.getElementById('mc-code').value.trim().toUpperCase(),
         nom,
         contact: document.getElementById('mc-contact').value.trim(),
         adresse1: document.getElementById('mc-adresse').value.trim(),
+        adresse: document.getElementById('mc-adresse').value.trim(),
+        adresse2: document.getElementById('mc-adresse2').value.trim(),
         cp: document.getElementById('mc-cp').value.trim(),
+        codePostal: document.getElementById('mc-cp').value.trim(),
         ville: document.getElementById('mc-ville').value.trim(),
+        pays: document.getElementById('mc-pays').value.trim(),
         telephone: document.getElementById('mc-tel').value.trim(),
+        mobile: document.getElementById('mc-mobile').value.trim(),
         email: document.getElementById('mc-email').value.trim(),
         conditionsPaiement: document.getElementById('mc-conditions').value,
         familleClient: document.getElementById('mc-famille').value.trim(),
         tvaIntracom: document.getElementById('mc-tva').value.trim(),
+        remise: document.getElementById('mc-remise').value || '0',
         dateModification: new Date().toISOString(),
     };
     localStorage.setItem(DB_PREFIX + 'clients', JSON.stringify(clients));
