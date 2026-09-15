@@ -1,0 +1,182 @@
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SECRET = process.env.NSA_SECRET || 'NSA2026';
+
+if (!global._nsa_tokens) global._nsa_tokens = new Map();
+const TOKENS = global._nsa_tokens;
+
+const STORES = ['articles', 'clients', 'commandes', 'livraisons', 'devis'];
+
+function cors(res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Token');
+}
+
+function auth(req) {
+    const token = req.headers['x-token'];
+    if (!token) return false;
+    const exp = TOKENS.get(token);
+    return exp && Date.now() < exp;
+}
+
+async function sb(method, table, body, params) {
+    params = params || '';
+    const url = `${SUPABASE_URL}/rest/v1/${table}${params}`;
+    const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+    };
+    if (method === 'POST') headers['Prefer'] = 'return=representation';
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    const text = await r.text();
+    return text ? JSON.parse(text) : [];
+}
+
+module.exports = async function handler(req, res) {
+    cors(res);
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
+    const url = req.url || '';
+    const parts = url.split('?')[0].split('/').filter(Boolean);
+
+    // POST /api/login
+    if (url.includes('/api/login') || req.query.action === 'login') {
+        const body = req.body || {};
+        const pwd = body.password || '';
+        if (pwd !== SECRET) return res.status(401).json({ error: 'Mot de passe incorrect' });
+        const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        TOKENS.set(token, Date.now() + 7 * 24 * 60 * 60 * 1000);
+        return res.json({ token, ok: true });
+    }
+
+    if (!auth(req)) return res.status(401).json({ error: 'Non autorise' });
+
+    const action = req.query.action || '';
+    const store = req.query.store || '';
+
+    // GET /api/ping
+    if (action === 'ping' || url.includes('/api/ping')) {
+        const stats = {};
+        for (const s of STORES) {
+            try { const rows = await sb('GET', s, null, '?select=id'); stats[s] = rows.length; }
+            catch(e) { stats[s] = 0; }
+        }
+        return res.json({ ok: true, stats });
+    }
+
+    // POST /api/import/:store
+    if (action === 'import' && store) {
+        if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
+        const body = req.body || {};
+        const items = body[store] || body.items || [];
+        let added = 0, updated = 0;
+
+        // Pour articles et clients : insérer sans vider (le client envoie par batch)
+        // La suppression est gérée par le paramètre ?reset=1
+        if (store === 'articles' || store === 'clients') {
+            // Vider seulement si demandé explicitement
+            if (req.query.reset === '1') {
+                try { await sb('DELETE', store, null, '?id=gte.0'); } catch(e) {}
+            }
+
+            // Préparer tous les objets à insérer
+            const toInsert = items.map(item => ({
+                data: item,
+                numero: item.numero || item.reference || item.code || null,
+                source: item.source || 'pc'
+            }));
+
+            // Insérer en une seule requête (bulk insert Supabase)
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/${store}`;
+                const r = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(toInsert)
+                });
+                if (r.ok) {
+                    added = toInsert.length;
+                } else {
+                    // Fallback : insérer par batch de 100
+                    const batchSize = 100;
+                    for (let i = 0; i < toInsert.length; i += batchSize) {
+                        const batch = toInsert.slice(i, i + batchSize);
+                        const r2 = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(batch)
+                        });
+                        if (r2.ok) added += batch.length;
+                    }
+                }
+            } catch(e) { console.error('Bulk insert error:', e.message); }
+        } else {
+            // Pour commandes/devis/livraisons : insérer directement
+            for (const item of items) {
+                const numero = item.numero || null;
+                try {
+                    await sb('POST', store, { data: item, numero, source: item.source || 'mobile' });
+                    added++;
+                } catch(e) {
+                    // Si doublon sur numéro, mettre à jour
+                    try {
+                        const ex = await sb('GET', store, null, `?numero=eq.${encodeURIComponent(numero)}&select=id`);
+                        if (ex && ex.length > 0) {
+                            await sb('PATCH', store, { data: item, updated_at: new Date().toISOString() }, `?id=eq.${ex[0].id}`);
+                            updated++;
+                        }
+                    } catch(e2) { console.error(e2.message); }
+                }
+            }
+        }
+        return res.json({ ok: true, added, updated });
+    }
+
+    // GET /api/export/:store
+    if (action === 'export' && store) {
+        if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
+        const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc&limit=10000');
+        const items = (rows || []).map(r => ({ ...(r.data || {}), _created: r.created_at }));
+        return res.json({ store, [store]: items, count: items.length });
+    }
+
+    // GET /api/mobile/:store (sans photos)
+    if (action === 'mobile' && store) {
+        if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
+        const CHAMPS = {
+            articles: ['reference','designation','descriptionCourte','codeBarres','categorie','composition','couleur','taille','prixAchat','prixVente','tva','conditionnement','stock','fournisseur'],
+            clients: ['code','nom','contact','adresse1','cp','ville','telephone','email','conditionsPaiement','familleClient','remise'],
+        };
+        const rows = await sb('GET', store, null, '?select=data&order=created_at.desc&limit=10000');
+        const champs = CHAMPS[store];
+        const items = (rows || []).map((r, i) => {
+            const d = r.data || {};
+            if (!champs) return d;
+            const safe = { id: i + 1 };
+            for (const k of champs) {
+                const v = d[k];
+                if (v == null) continue;
+                if (typeof v === 'string' && v.startsWith('data:')) continue;
+                if (typeof v !== 'object') safe[k] = v;
+            }
+            return safe;
+        });
+        return res.json({ store, [store]: items, count: items.length });
+    }
+
+    return res.status(400).json({ error: 'Action inconnue', url, action, store });
+};
