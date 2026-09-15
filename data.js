@@ -75,23 +75,52 @@ module.exports = async function handler(req, res) {
         const items = body[store] || body.items || [];
         let added = 0, updated = 0;
 
-        // Pour articles et clients : vider TOUT puis réinsérer
+        // Pour articles et clients : vider TOUT puis insérer en masse
         if (store === 'articles' || store === 'clients') {
             // Vider complètement le store
-            try { await sb('DELETE', store, null, '?created_at=gte.2000-01-01'); } catch(e) {}
             try { await sb('DELETE', store, null, '?id=gte.0'); } catch(e) {}
 
-            // Réinsérer un par un
-            for (const item of items) {
-                try {
-                    await sb('POST', store, {
-                        data: item,
-                        numero: item.numero || item.reference || item.code || null,
-                        source: item.source || 'pc'
-                    });
-                    added++;
-                } catch(e) { console.error(e.message); }
-            }
+            // Préparer tous les objets à insérer
+            const toInsert = items.map(item => ({
+                data: item,
+                numero: item.numero || item.reference || item.code || null,
+                source: item.source || 'pc'
+            }));
+
+            // Insérer en une seule requête (bulk insert Supabase)
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/${store}`;
+                const r = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(toInsert)
+                });
+                if (r.ok) {
+                    added = toInsert.length;
+                } else {
+                    // Fallback : insérer par batch de 100
+                    const batchSize = 100;
+                    for (let i = 0; i < toInsert.length; i += batchSize) {
+                        const batch = toInsert.slice(i, i + batchSize);
+                        const r2 = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(batch)
+                        });
+                        if (r2.ok) added += batch.length;
+                    }
+                }
+            } catch(e) { console.error('Bulk insert error:', e.message); }
         } else {
             // Pour commandes/devis/livraisons : vérifier par numéro
             const existants = await sb('GET', store, null, '?select=id,numero&limit=10000');
