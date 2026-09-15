@@ -75,36 +75,42 @@ module.exports = async function handler(req, res) {
         const items = body[store] || body.items || [];
         let added = 0, updated = 0;
 
-        // Charger tous les existants pour éviter les doublons
-        const existants = await sb('GET', store, null, '?select=id,data,numero&limit=10000');
+        // Pour articles et clients : vider et réinsérer (plus fiable que la mise à jour)
+        if (store === 'articles' || store === 'clients') {
+            // Vider le store
+            try { await sb('DELETE', store, null, '?id=gt.0'); } catch(e) {}
 
-        for (const item of items) {
-            const numero = item.numero || null;
-            const refArticle = item.reference || null;
-            const codeClient = item.code || null;
-            try {
-                // Chercher un doublon existant
-                let existing = null;
-                if (numero) {
-                    existing = existants.find(x => x.numero === numero);
+            // Réinsérer par batch de 50
+            const batchSize = 50;
+            for (let i = 0; i < items.length; i += batchSize) {
+                const batch = items.slice(i, i + batchSize);
+                for (const item of batch) {
+                    try {
+                        await sb('POST', store, {
+                            data: item,
+                            numero: item.numero || item.reference || item.code || null,
+                            source: item.source || 'pc'
+                        });
+                        added++;
+                    } catch(e) { console.error(e.message); }
                 }
-                if (!existing && store === 'articles' && refArticle) {
-                    existing = existants.find(x => (x.data || {}).reference === refArticle);
-                }
-                if (!existing && store === 'clients' && codeClient) {
-                    existing = existants.find(x => (x.data || {}).code === codeClient);
-                }
-
-                if (existing) {
-                    await sb('PATCH', store, { data: item, numero, updated_at: new Date().toISOString() }, `?id=eq.${existing.id}`);
-                    updated++;
-                } else {
-                    await sb('POST', store, { data: item, numero, source: item.source || 'pc' });
-                    added++;
-                    // Ajouter au cache local pour éviter doublons dans le même import
-                    existants.push({ id: Date.now(), data: item, numero });
-                }
-            } catch(e) { console.error(e.message); }
+            }
+        } else {
+            // Pour commandes/devis/livraisons : vérifier par numéro
+            const existants = await sb('GET', store, null, '?select=id,numero&limit=10000');
+            for (const item of items) {
+                const numero = item.numero || null;
+                try {
+                    const existing = numero ? existants.find(x => x.numero === numero) : null;
+                    if (existing) {
+                        await sb('PATCH', store, { data: item, updated_at: new Date().toISOString() }, `?id=eq.${existing.id}`);
+                        updated++;
+                    } else {
+                        await sb('POST', store, { data: item, numero, source: item.source || 'mobile' });
+                        added++;
+                    }
+                } catch(e) { console.error(e.message); }
+            }
         }
         return res.json({ ok: true, added, updated });
     }
