@@ -243,8 +243,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <!-- Champ principal - optimisé scannette Bluetooth ET saisie manuelle -->
         <div style="position:relative;">
           <input class="scan-input" type="text" id="inp-ean"
-            placeholder="Scannette ou référence..."
-            inputmode="text"
+            placeholder="Scannette Bluetooth..."
+            inputmode="none"
             autocomplete="off"
             autocorrect="off"
             autocapitalize="none"
@@ -2446,12 +2446,18 @@ let modeSaisieManuelle = false;
 
 function saisieManuelleRef() {
     desactiverScanFocus();
-    const val = prompt('Entrez la référence ou EAN13 :');
-    if (val && val.trim()) {
-        const inp = document.getElementById('inp-ean');
-        inp.value = val.trim();
-        rechercherArticle();
-    }
+    const inp = document.getElementById('inp-ean');
+    inp.value = '';
+    inp.setAttribute('inputmode', 'text'); // Activer le clavier
+    inp.placeholder = 'Tapez la référence...';
+    inp.focus();
+    inp.click();
+    // Remettre en mode scannette après recherche
+    inp.onblur = () => {
+        inp.setAttribute('inputmode', 'none');
+        inp.placeholder = 'Scannette Bluetooth...';
+        inp.onblur = null;
+    };
 }
 
 function basculerModeSaisie() {
@@ -2541,7 +2547,8 @@ async function sauvegarderNouvelArticle() {
 function focusScan() {
     const inp = document.getElementById('inp-ean');
     inp.value = '';
-    inp.focus();
+    inp.setAttribute('inputmode', 'none'); // Pas de clavier virtuel
+    inp.focus({ preventScroll: true });
     scanFocusActif = true;
     // Maintenir le focus automatiquement toutes les 2 secondes
     if (scanFocusInterval) clearInterval(scanFocusInterval);
