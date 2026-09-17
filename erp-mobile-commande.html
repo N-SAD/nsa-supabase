@@ -247,7 +247,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
             inputmode="text"
             autocomplete="off"
             autocorrect="off"
-            autocapitalize="characters"
+            autocapitalize="none"
             spellcheck="false"
             style="width:100%;padding:14px 50px 14px 16px;border-radius:12px;font-size:16px;border:none;"
             onkeydown="onEanKeydown(event)"
@@ -1212,7 +1212,10 @@ async function rechercherArticle() {
         toast('✅ ' + (art.reference || 'Article') + ' trouvé', 'success');
     } else {
         articleCourant = null;
-        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong></div>';
+        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong>'
+            + '<div style="margin-top:10px;">'
+            + '<button onclick="creerNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
+            + '</div></div>';
         zoneQty.style.display = 'none';
     }
 }
@@ -2443,6 +2446,65 @@ function onEanKeydown(event) {
 let scanFocusActif = false;
 let scanFocusInterval = null;
 
+async function creerNouvelArticle(ref) {
+    // Pré-remplir la référence et ouvrir un mini formulaire
+    const zone = document.getElementById('zone-article');
+    zone.innerHTML = `
+    <div class="card" style="border:2px solid #2563eb;">
+        <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:12px;">➕ Nouvel article</div>
+        <div class="field"><label>Référence *</label>
+            <input type="text" id="new-art-ref" value="${ref}" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+        </div>
+        <div class="field"><label>Désignation *</label>
+            <input type="text" id="new-art-nom" placeholder="Nom de l'article..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="field"><label>Prix vente HT</label>
+                <input type="number" id="new-art-prix" value="0" step="0.01" inputmode="decimal" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+            </div>
+            <div class="field"><label>EAN13</label>
+                <input type="text" id="new-art-ean" placeholder="Code barre..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+            </div>
+        </div>
+        <button onclick="sauvegarderNouvelArticle()" style="background:#10b981;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;">💾 Créer et ajouter</button>
+    </div>`;
+}
+
+async function sauvegarderNouvelArticle() {
+    const ref = document.getElementById('new-art-ref').value.trim();
+    const nom = document.getElementById('new-art-nom').value.trim();
+    const prix = parseFloat(document.getElementById('new-art-prix').value) || 0;
+    const ean = document.getElementById('new-art-ean').value.trim();
+    if (!ref || !nom) { toast('⚠️ Référence et désignation obligatoires', 'warn'); return; }
+    const nouvelArt = {
+        id: Date.now(),
+        reference: ref,
+        designation: nom,
+        descriptionCourte: nom,
+        codeBarres: ean,
+        prixVente: prix,
+        prixAchat: 0,
+        stock: 0,
+        tva: '20',
+    };
+    // Sauvegarder dans la base locale
+    articles.push(nouvelArt);
+    dbSaveAll('articles', articles);
+    // Sélectionner cet article
+    articleCourant = nouvelArt;
+    const photoHTML = '<div class="art-icon">📦</div>';
+    document.getElementById('zone-article').innerHTML = '<div class="article-found">' + photoHTML
+        + '<div class="art-info">'
+        + '<div class="art-ref">' + ref + '</div>'
+        + '<div class="art-name">' + nom + '</div>'
+        + '<div class="art-price">' + prix.toFixed(2).replace('.',',') + ' € HT</div>'
+        + '</div></div>';
+    document.getElementById('inp-qty').value = 1;
+    document.getElementById('zone-qty').style.display = '';
+    document.getElementById('inp-ean').value = '';
+    toast('✅ Article créé : ' + ref, 'success');
+}
+
 function focusScan() {
     const inp = document.getElementById('inp-ean');
     inp.value = '';
@@ -2710,7 +2772,10 @@ async function rechercherArticleDevis() {
         document.getElementById('inp-ean-devis').value = '';
     } else {
         articleDevisCourant = null;
-        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong></div>';
+        zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong>'
+            + '<div style="margin-top:10px;">'
+            + '<button onclick="creerNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
+            + '</div></div>';
         zoneQty.style.display = 'none';
     }
 }
