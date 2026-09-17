@@ -203,8 +203,17 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div class="card-title">📋 Document</div>
         <div class="type-btns">
           <button class="type-btn active" id="btn-cmd" onclick="setTypeDoc('commande')">🛒 Commande</button>
-          <button class="type-btn" id="btn-bl" onclick="setTypeDoc('bl')">📦 Bon livraison</button>
+
         </div>
+        <!-- Remise ligne par défaut -->
+        <div class="field">
+          <label>Remise ligne par défaut (%)</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
+            <span style="font-size:13px;color:var(--text-2);">% — appliqué automatiquement à chaque ligne</span>
+          </div>
+        </div>
+
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
@@ -359,6 +368,15 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
       <div class="card">
         <div class="card-title">📝 Nouveau devis</div>
         <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Un devis peut être transféré en commande depuis l'historique.</p>
+        <!-- Remise ligne par défaut -->
+        <div class="field">
+          <label>Remise ligne par défaut (%)</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
+            <span style="font-size:13px;color:var(--text-2);">% — appliqué automatiquement à chaque ligne</span>
+          </div>
+        </div>
+
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
@@ -762,9 +780,18 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <input type="text" id="mc-tva" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="FR00000000000">
   </div>
 
-  <div style="padding:14px 16px;margin-bottom:30px;">
+  <div style="border-bottom:1px solid var(--border);padding:14px 16px;">
     <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Remise (%)</div>
     <input type="number" id="mc-remise" inputmode="decimal" min="0" max="100" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="0">
+  </div>
+
+  <!-- Section Code fournisseur -->
+  <div style="background:#f8fafc;padding:12px 16px;font-size:13px;font-weight:700;color:var(--text);">🏷️ Notre code fournisseur</div>
+
+  <div style="padding:14px 16px;margin-bottom:30px;">
+    <div style="font-size:12px;color:#2563eb;font-weight:600;margin-bottom:4px;">Notre code chez ce client</div>
+    <input type="text" id="mc-code-fournisseur" style="width:100%;border:none;font-size:15px;outline:none;" placeholder="Ex: 2026 03292">
+    <div style="font-size:11px;color:var(--text-2);margin-top:4px;">Code que ce client utilise pour nous identifier</div>
   </div>
 
   <!-- Bouton sauvegarder en bas -->
@@ -1212,7 +1239,9 @@ function changeQty(delta) {
 function ajouterAuPanier() {
     if (!articleCourant) return;
     const qty = parseInt(document.getElementById('inp-qty').value) || 1;
-    const remiseLigne = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
+    const remiseLigneInput = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
+    const remiseDefaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value || 0) || 0;
+    const remiseLigne = remiseLigneInput > 0 ? remiseLigneInput : remiseDefaut;
     const prixBase = parseFloat(articleCourant.prixVente) || 0;
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
     const exist = panier.find(l => l.articleId === articleCourant.id);
@@ -1232,7 +1261,9 @@ function ajouterAuPanier() {
         });
     }
     // Reset remise ligne
-    document.getElementById('inp-remise-ligne').value = '0';
+    // Remettre la remise ligne à la valeur par défaut
+    const defaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value) || 0;
+    document.getElementById('inp-remise-ligne').value = defaut;
     // Vider le champ EAN pour le prochain scan
     const inpEan = document.getElementById('inp-ean');
     if (inpEan) { inpEan.value = ''; inpEan.focus(); }
@@ -1358,6 +1389,16 @@ function bloquerScanRemise(event) {
         event.preventDefault();
         event.stopPropagation();
         document.getElementById('inp-ean').focus();
+    }
+}
+
+function mettreAJourRemiseLigneDefaut() {
+    const val = parseFloat(document.getElementById('remise-ligne-defaut').value) || 0;
+    // Mettre à jour le champ remise ligne visible
+    const inpRemiseLigne = document.getElementById('inp-remise-ligne');
+    if (inpRemiseLigne) {
+        inpRemiseLigne.value = val;
+        mettreAJourPrixRemise();
     }
 }
 
@@ -1494,6 +1535,8 @@ async function validerCommande() {
         if (zoneQty) zoneQty.style.display = 'none';
         const inpRemise = document.getElementById('inp-remise-globale');
         if (inpRemise) inpRemise.value = '0';
+        const inpDefaut = document.getElementById('remise-ligne-defaut');
+        if (inpDefaut) inpDefaut.value = '0';
         const inpDate = document.getElementById('inp-date-livraison');
         if (inpDate) inpDate.value = '';
         const btnType = document.getElementById('btn-cmd');
@@ -2802,8 +2845,23 @@ function selectionnerClientCommande(id) {
     }
     const btnVider = document.getElementById('btn-vider-client');
     if (btnVider) btnVider.style.display = '';
+
+    // Charger automatiquement la remise globale du client
+    const remiseClient = parseFloat(String(cl.remiseGlobale || cl.remise || '0').replace(',','.')) || 0;
+    const inpRemiseGlobale = document.getElementById('inp-remise-globale');
+    if (inpRemiseGlobale && remiseClient > 0) {
+        inpRemiseGlobale.value = remiseClient;
+        renderPanier();
+    }
+
+    // Charger aussi la remise ligne par défaut
+    const remiseLigneDefaut = document.getElementById('remise-ligne-defaut');
+    if (remiseLigneDefaut && remiseClient > 0 && parseFloat(remiseLigneDefaut.value) === 0) {
+        remiseLigneDefaut.value = remiseClient;
+    }
+
     fermerListeClientsCommande();
-    toast('✅ Client : ' + cl.nom, 'success');
+    toast('✅ Client : ' + cl.nom + (remiseClient > 0 ? ' — Remise ' + remiseClient + '%' : ''), 'success');
 }
 
 function viderClientCommande() {
@@ -2839,6 +2897,15 @@ async function ouvrirFicheClient(id) {
     // Adresse
     const adr = [cl.adresse1||cl.adresse, cl.cp, cl.ville, cl.pays].filter(Boolean).join('<br>');
     document.getElementById('fiche-client-adresse').innerHTML = adr || '<span style="color:var(--text-2);">—</span>';
+
+    // Code fournisseur
+    const codeFourn = cl.codeFournisseurClient || '';
+    if (codeFourn) {
+        const condDiv = document.getElementById('fiche-client-conditions');
+        if (condDiv) {
+            condDiv.innerHTML += '<div style="margin-top:8px;padding:6px 10px;background:#eff6ff;border-radius:6px;font-size:12px;"><span style="color:var(--text-2);">Notre code :</span> <strong style="color:var(--primary);">' + codeFourn + '</strong></div>';
+        }
+    }
 
     // Conditions — chercher dans tous les champs possibles
     const condPaiement = cl.conditionsPaiement || cl.conditions || '';
@@ -2937,6 +3004,7 @@ async function ouvrirModifClient(id) {
     document.getElementById('mc-famille').value = cl.familleClient || cl.famille || '';
     document.getElementById('mc-tva').value = cl.tvaIntracom || cl.tva || '';
     document.getElementById('mc-remise').value = cl.remise || cl.remiseGlobale || '';
+    document.getElementById('mc-code-fournisseur').value = cl.codeFournisseurClient || '';
     document.getElementById('modal-modif-client').style.display = 'block';
 }
 
@@ -2970,6 +3038,7 @@ async function sauvegarderModifClient() {
         familleClient: document.getElementById('mc-famille').value.trim(),
         tvaIntracom: document.getElementById('mc-tva').value.trim(),
         remise: document.getElementById('mc-remise').value || '0',
+        codeFournisseurClient: document.getElementById('mc-code-fournisseur').value.trim(),
         dateModification: new Date().toISOString(),
     };
     localStorage.setItem(DB_PREFIX + 'clients', JSON.stringify(clients));
