@@ -1,5 +1,5 @@
-// Service Worker NSA ERP - version 202609081407
-const CACHE_NAME = 'nsa-erp-202609081407';
+// Service Worker NSA ERP - version 202609171650
+const CACHE_NAME = 'nsa-erp-202609171650';
 const URLS = ['/mobile', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {
