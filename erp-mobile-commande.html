@@ -205,15 +205,6 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button class="type-btn active" id="btn-cmd" onclick="setTypeDoc('commande')">🛒 Commande</button>
 
         </div>
-        <!-- Remise ligne par défaut -->
-        <div class="field">
-          <label>Remise ligne par défaut (%)</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
-            <span style="font-size:13px;color:var(--text-2);">% — appliqué automatiquement à chaque ligne</span>
-          </div>
-        </div>
-
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
@@ -233,6 +224,15 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div class="field">
           <label>Date de livraison souhaitée</label>
           <input type="date" id="inp-date-livraison" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);">
+        </div>
+
+        <!-- Remise ligne par défaut -->
+        <div class="field">
+          <label>Remise ligne par défaut (%)</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
+            <span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
+          </div>
         </div>
       </div>
 
@@ -368,15 +368,6 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
       <div class="card">
         <div class="card-title">📝 Nouveau devis</div>
         <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Un devis peut être transféré en commande depuis l'historique.</p>
-        <!-- Remise ligne par défaut -->
-        <div class="field">
-          <label>Remise ligne par défaut (%)</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
-            <span style="font-size:13px;color:var(--text-2);">% — appliqué automatiquement à chaque ligne</span>
-          </div>
-        </div>
-
         <div class="field">
           <label>Client *</label>
           <div style="display:flex;gap:8px;">
