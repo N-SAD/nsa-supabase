@@ -257,11 +257,10 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 
         <!-- Boutons rapides -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <label style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,0.15);color:white;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
-            📷 Photo
-            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="analyserPhotoBarcode(this)">
-          </label>
-          <button onclick="focusScan()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+          <button onclick="saisieManuelleRef()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+            ⌨️ Saisie manuelle
+          </button>
+          <button id="btn-mode-scan" onclick="focusScan()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
             🔌 Scannette
           </button>
         </div>
@@ -2440,6 +2439,40 @@ function onEanKeydown(event) {
         el.value += AZERTY_CHIFFRES[key];
         // Déclencher onEanInput manuellement
         onEanInput(el);
+    }
+}
+
+let modeSaisieManuelle = false;
+
+function saisieManuelleRef() {
+    desactiverScanFocus();
+    const val = prompt('Entrez la référence ou EAN13 :');
+    if (val && val.trim()) {
+        const inp = document.getElementById('inp-ean');
+        inp.value = val.trim();
+        rechercherArticle();
+    }
+}
+
+function basculerModeSaisie() {
+    modeSaisieManuelle = !modeSaisieManuelle;
+    const btn = document.getElementById('btn-mode-scan');
+    const inp = document.getElementById('inp-ean');
+    if (modeSaisieManuelle) {
+        // Mode saisie manuelle - afficher le clavier
+        desactiverScanFocus();
+        btn.textContent = '🔌 Scannette';
+        btn.style.background = 'rgba(255,255,255,0.15)';
+        inp.placeholder = 'Tapez une référence...';
+        inp.readOnly = false;
+        // Petit délai pour que le readonly=false soit pris en compte
+        setTimeout(() => { inp.focus(); inp.click(); }, 50);
+        toast('⌨️ Mode saisie manuelle', 'success');
+    } else {
+        // Mode scannette
+        inp.placeholder = 'Scannette ou référence...';
+        inp.readOnly = false;
+        focusScan();
     }
 }
 
