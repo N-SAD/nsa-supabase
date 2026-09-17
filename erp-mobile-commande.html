@@ -2440,13 +2440,32 @@ function onEanKeydown(event) {
     }
 }
 
+let scanFocusActif = false;
+let scanFocusInterval = null;
+
 function focusScan() {
-    // Active le champ et affiche le clavier pour la scannette
     const inp = document.getElementById('inp-ean');
     inp.value = '';
     inp.focus();
-    // Message d'aide
-    toast('🔌 Scannette prête — scannez le code-barres', 'success');
+    scanFocusActif = true;
+    // Maintenir le focus automatiquement toutes les 2 secondes
+    if (scanFocusInterval) clearInterval(scanFocusInterval);
+    scanFocusInterval = setInterval(() => {
+        if (!scanFocusActif) { clearInterval(scanFocusInterval); return; }
+        const el = document.getElementById('inp-ean');
+        if (el && document.activeElement !== el) {
+            // Ne pas refocus si un modal est ouvert
+            const modalOuvert = document.querySelector('[style*="display: block"][id^="modal"]')
+                || document.querySelector('[style*="display:block"][id^="modal"]');
+            if (!modalOuvert) el.focus();
+        }
+    }, 2000);
+    toast('🔌 Scannette active — focus automatique maintenu', 'success');
+}
+
+function desactiverScanFocus() {
+    scanFocusActif = false;
+    if (scanFocusInterval) { clearInterval(scanFocusInterval); scanFocusInterval = null; }
 }
 
 function onBarcodeNative(val) {
