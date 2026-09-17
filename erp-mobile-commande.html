@@ -2854,11 +2854,7 @@ function selectionnerClientCommande(id) {
         renderPanier();
     }
 
-    // Charger aussi la remise ligne par défaut
-    const remiseLigneDefaut = document.getElementById('remise-ligne-defaut');
-    if (remiseLigneDefaut && remiseClient > 0 && parseFloat(remiseLigneDefaut.value) === 0) {
-        remiseLigneDefaut.value = remiseClient;
-    }
+    // Remise ligne par défaut reste à 0 - saisie manuelle uniquement
 
     fermerListeClientsCommande();
     toast('✅ Client : ' + cl.nom + (remiseClient > 0 ? ' — Remise ' + remiseClient + '%' : ''), 'success');
