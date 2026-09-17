@@ -2414,10 +2414,29 @@ function onEanInput(el) {
     // Code alphanumérique avec / → attendre Enter
 }
 
+// Table conversion touches QWERTY SHIFT → chiffres (scannette Bluetooth)
+// La scannette envoie les chiffres avec Shift en mode QWERTY US
+// ! @ # $ % ^ & * ( ) → 1 2 3 4 5 6 7 8 9 0
+const AZERTY_CHIFFRES = {
+    '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+    '^': '6', '&': '7', '*': '8', '(': '9', ')': '0',
+};
+
 function onEanKeydown(event) {
     if (event.key === 'Enter' || event.keyCode === 13) {
         event.preventDefault();
         rechercherArticle();
+        return;
+    }
+    
+    // Conversion AZERTY → chiffre si c'est un caractère spécial
+    const key = event.key;
+    if (key && key.length === 1 && AZERTY_CHIFFRES[key] !== undefined) {
+        event.preventDefault();
+        const el = document.getElementById('inp-ean');
+        el.value += AZERTY_CHIFFRES[key];
+        // Déclencher onEanInput manuellement
+        onEanInput(el);
     }
 }
 
