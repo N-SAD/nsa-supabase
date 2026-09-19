@@ -36,6 +36,38 @@ async function sb(method, table, body, params) {
     return text ? JSON.parse(text) : [];
 }
 
+// Lecture complète avec pagination (Supabase plafonne à 1000 lignes par requête)
+async function sbAll(table, params) {
+    const PAGE = 1000;
+    let all = [];
+    for (let offset = 0; offset < 200000; offset += PAGE) {
+        const url = `${SUPABASE_URL}/rest/v1/${table}${params}&limit=${PAGE}&offset=${offset}`;
+        const r = await fetch(url, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        const text = await r.text();
+        const rows = text ? JSON.parse(text) : [];
+        if (!Array.isArray(rows)) break;
+        all = all.concat(rows);
+        if (rows.length < PAGE) break;
+    }
+    return all;
+}
+
+// Comptage exact d'une table (sans le plafond de 1000)
+async function sbCount(table) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=id&limit=1`, {
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'count=exact'
+        }
+    });
+    const range = r.headers.get('content-range') || '';
+    const total = parseInt(range.split('/')[1], 10);
+    return isNaN(total) ? 0 : total;
+}
+
 module.exports = async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -62,7 +94,7 @@ module.exports = async function handler(req, res) {
     if (action === 'ping' || url.includes('/api/ping')) {
         const stats = {};
         for (const s of STORES) {
-            try { const rows = await sb('GET', s, null, '?select=id'); stats[s] = rows.length; }
+            try { stats[s] = await sbCount(s); }
             catch(e) { stats[s] = 0; }
         }
         return res.json({ ok: true, stats });
@@ -149,7 +181,7 @@ module.exports = async function handler(req, res) {
     // GET /api/export/:store
     if (action === 'export' && store) {
         if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
-        const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc&limit=10000');
+        const rows = await sbAll(store, '?select=data,numero,source,created_at&order=created_at.desc,id.desc');
         const items = (rows || []).map(r => {
             // data peut être string ou objet selon Supabase
             let d = r.data;
@@ -167,7 +199,7 @@ module.exports = async function handler(req, res) {
             articles: ['reference','designation','descriptionCourte','codeBarres','categorie','composition','couleur','taille','prixAchat','prixVente','tva','conditionnement','stock','fournisseur'],
             clients: ['code','nom','contact','adresse1','cp','ville','telephone','email','conditionsPaiement','familleClient','remise'],
         };
-        const rows = await sb('GET', store, null, '?select=data&order=created_at.desc&limit=10000');
+        const rows = await sbAll(store, '?select=data&order=created_at.desc,id.desc');
         const champs = CHAMPS[store];
         const items = (rows || []).map((r, i) => {
             const d = r.data || {};
