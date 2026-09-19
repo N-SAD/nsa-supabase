@@ -261,7 +261,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 
         <!-- Boutons rapides -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <button onclick="saisieManuelleRef()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+          <button id="btn-saisie-manuelle" onclick="saisieManuelleRef()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
             ⌨️ Saisie manuelle
           </button>
           <button id="btn-mode-scan" onclick="focusScan()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
@@ -2408,6 +2408,9 @@ function onEanInput(el) {
     // Annuler le timer précédent
     if (eanTimer) { clearTimeout(eanTimer); eanTimer = null; }
 
+    // Saisie manuelle au clavier : pas de recherche automatique, on attend Entrée ou ➕
+    if (modeSaisieManuelle) return;
+
     // Si plus de 13 chiffres → cumul, garder les 13 derniers
     if (/^[0-9]+$/.test(val) && val.length > 13) {
         el.value = val.slice(-13);
@@ -2464,20 +2467,37 @@ function onEanKeydown(event) {
 
 let modeSaisieManuelle = false;
 
+function majBoutonsMode() {
+    const bm = document.getElementById('btn-saisie-manuelle');
+    const bs = document.getElementById('btn-mode-scan');
+    if (bm) {
+        bm.style.background = modeSaisieManuelle ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
+        bm.textContent = modeSaisieManuelle ? '⌨️ Saisie manuelle ✓' : '⌨️ Saisie manuelle';
+    }
+    if (bs) {
+        bs.style.background = (!modeSaisieManuelle && scanFocusActif) ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
+    }
+}
+
 function saisieManuelleRef() {
+    // Bascule en mode clavier : le champ reste en saisie texte jusqu'au clic sur "Scannette"
+    modeSaisieManuelle = true;
     desactiverScanFocus();
     const inp = document.getElementById('inp-ean');
+    inp.onblur = null;
     inp.value = '';
-    inp.setAttribute('inputmode', 'text'); // Activer le clavier
-    inp.placeholder = 'Tapez la référence...';
+    inp.readOnly = false;
+    inp.placeholder = 'Tapez la référence puis Entrée...';
+    inp.setAttribute('inputmode', 'text');
+    inp.setAttribute('enterkeyhint', 'search');
+    inp.setAttribute('autocapitalize', 'characters');
+    majBoutonsMode();
+    // iOS ne change pas le clavier d'un champ déjà actif : on quitte puis on reprend le focus
+    inp.blur();
     inp.focus();
     inp.click();
-    // Remettre en mode scannette après recherche
-    inp.onblur = () => {
-        inp.setAttribute('inputmode', 'none');
-        inp.placeholder = 'Scannette Bluetooth...';
-        inp.onblur = null;
-    };
+    setTimeout(() => { if (document.activeElement !== inp) inp.focus(); }, 120);
+    toast('⌨️ Mode saisie manuelle', 'success');
 }
 
 function basculerModeSaisie() {
@@ -2505,28 +2525,44 @@ function basculerModeSaisie() {
 let scanFocusActif = false;
 let scanFocusInterval = null;
 
-async function creerNouvelArticle(ref) {
-    // Pré-remplir la référence et ouvrir un mini formulaire
-    const zone = document.getElementById('zone-article');
+let _scanReprise = false;
+let _creationCtx = 'commande';
+
+async function creerNouvelArticle(ref, ctx) {
+    _creationCtx = (ctx === 'devis') ? 'devis' : 'commande';
+    // Couper le focus automatique de la scannette : sinon il reprend la main
+    // toutes les 2 secondes et fait disparaître le clavier pendant la saisie
+    _scanReprise = scanFocusActif;
+    desactiverScanFocus();
+    const inpScan = document.getElementById(_creationCtx === 'devis' ? 'inp-ean-devis' : 'inp-ean');
+    if (inpScan) inpScan.blur();
+
+    const zone = document.getElementById(_creationCtx === 'devis' ? 'zone-article-devis' : 'zone-article');
+    const refSafe = String(ref || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     zone.innerHTML = `
     <div class="card" style="border:2px solid #2563eb;">
         <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:12px;">➕ Nouvel article</div>
         <div class="field"><label>Référence *</label>
-            <input type="text" id="new-art-ref" value="${ref}" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+            <input type="text" id="new-art-ref" value="${refSafe}" inputmode="text" autocomplete="off" autocapitalize="characters" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
         </div>
         <div class="field"><label>Désignation *</label>
-            <input type="text" id="new-art-nom" placeholder="Nom de l'article..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+            <input type="text" id="new-art-nom" placeholder="Nom de l'article..." inputmode="text" autocomplete="off" autocapitalize="sentences" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div class="field"><label>Prix vente HT</label>
-                <input type="number" id="new-art-prix" value="0" step="0.01" inputmode="decimal" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                <input type="number" id="new-art-prix" value="0" step="0.01" inputmode="decimal" onclick="this.select()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
             </div>
             <div class="field"><label>EAN13</label>
-                <input type="text" id="new-art-ean" placeholder="Code barre..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                <input type="text" id="new-art-ean" placeholder="Code barre..." inputmode="numeric" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
             </div>
         </div>
         <button onclick="sauvegarderNouvelArticle()" style="background:#10b981;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;">💾 Créer et ajouter</button>
     </div>`;
+    // Ouvrir le clavier directement sur la désignation
+    setTimeout(() => {
+        const n = document.getElementById('new-art-nom');
+        if (n) { n.focus(); n.click(); }
+    }, 150);
 }
 
 async function sauvegarderNouvelArticle() {
@@ -2548,28 +2584,43 @@ async function sauvegarderNouvelArticle() {
     };
     // Sauvegarder dans la base locale
     articles.push(nouvelArt);
-    dbSaveAll('articles', articles);
-    // Sélectionner cet article
-    articleCourant = nouvelArt;
+    await dbSaveAll('articles', articles);
     const photoHTML = '<div class="art-icon">📦</div>';
-    document.getElementById('zone-article').innerHTML = '<div class="article-found">' + photoHTML
+    const fiche = '<div class="article-found">' + photoHTML
         + '<div class="art-info">'
         + '<div class="art-ref">' + ref + '</div>'
         + '<div class="art-name">' + nom + '</div>'
         + '<div class="art-price">' + prix.toFixed(2).replace('.',',') + ' € HT</div>'
         + '</div></div>';
-    document.getElementById('inp-qty').value = 1;
-    document.getElementById('zone-qty').style.display = '';
-    document.getElementById('inp-ean').value = '';
+    if (_creationCtx === 'devis') {
+        articleDevisCourant = nouvelArt;
+        document.getElementById('zone-article-devis').innerHTML = fiche;
+        document.getElementById('inp-qty-devis').value = 1;
+        document.getElementById('zone-qty-devis').style.display = '';
+        document.getElementById('inp-ean-devis').value = '';
+    } else {
+        // Sélectionner cet article
+        articleCourant = nouvelArt;
+        document.getElementById('zone-article').innerHTML = fiche;
+        document.getElementById('inp-qty').value = 1;
+        document.getElementById('zone-qty').style.display = '';
+        document.getElementById('inp-ean').value = '';
+        // Remettre la scannette en veille active si elle l'était avant la création
+        if (_scanReprise) focusScan();
+    }
     toast('✅ Article créé : ' + ref, 'success');
 }
 
 function focusScan() {
     const inp = document.getElementById('inp-ean');
     inp.value = '';
+    modeSaisieManuelle = false;
+    inp.placeholder = 'Scannette Bluetooth...';
     inp.setAttribute('inputmode', 'none'); // Pas de clavier virtuel
+    inp.setAttribute('autocapitalize', 'none');
     inp.focus({ preventScroll: true });
     scanFocusActif = true;
+    majBoutonsMode();
     // Maintenir le focus automatiquement toutes les 2 secondes
     if (scanFocusInterval) clearInterval(scanFocusInterval);
     scanFocusInterval = setInterval(() => {
@@ -2588,6 +2639,7 @@ function focusScan() {
 function desactiverScanFocus() {
     scanFocusActif = false;
     if (scanFocusInterval) { clearInterval(scanFocusInterval); scanFocusInterval = null; }
+    if (typeof majBoutonsMode === 'function') majBoutonsMode();
 }
 
 function onBarcodeNative(val) {
@@ -2834,7 +2886,7 @@ async function rechercherArticleDevis() {
         articleDevisCourant = null;
         zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong>'
             + '<div style="margin-top:10px;">'
-            + '<button onclick="creerNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
+            + '<button onclick="creerNouvelArticle(\''+val+'\',\'devis\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
             + '</div></div>';
         zoneQty.style.display = 'none';
     }
