@@ -199,7 +199,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <div class="page" id="pg-commande">
 
       <!-- Client + Type doc -->
-      <div class="card">
+      <div class="card" id="etape-document">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
           <div class="card-title" style="margin-bottom:0;">📋 Document</div>
@@ -238,7 +238,14 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
             <span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
           </div>
         </div>
+
+        <button onclick="allerEtapeArticles()" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:6px;">📦 Saisie des articles →</button>
       </div>
+      <!-- /etape-document -->
+
+      <div id="etape-articles" style="display:none;">
+      <button onclick="allerEtapeDocument()" style="background:#f1f5f9;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;">← Document</button>
+      <div id="resume-client-articles" style="font-size:12px;color:var(--text-2);margin:-4px 0 10px;"></div>
 
       <!-- SCAN -->
       <div class="scan-zone">
@@ -314,6 +321,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <span>Total TTC</span><span id="total-ttc">0,00 €</span>
         </div>
       </div>
+      </div><!-- /etape-articles -->
 
     </div><!-- /pg-commande -->
 
@@ -970,6 +978,25 @@ function remplirSelectClients() {
 // ============================================================
 // NAVIGATION
 // ============================================================
+function allerEtapeArticles() {
+    if (!document.getElementById('sel-client').value) {
+        toast('⚠️ Sélectionnez un client', 'warn');
+        return;
+    }
+    document.getElementById('etape-document').style.display = 'none';
+    document.getElementById('etape-articles').style.display = '';
+    const nom = document.getElementById('client-selectionne-nom').textContent;
+    const resume = document.getElementById('resume-client-articles');
+    if (resume) resume.textContent = '👤 ' + nom;
+    focusScan();
+}
+
+function allerEtapeDocument() {
+    desactiverScanFocus();
+    document.getElementById('etape-articles').style.display = 'none';
+    document.getElementById('etape-document').style.display = '';
+}
+
 function goPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1000,8 +1027,20 @@ function goPage(name) {
     if (name === 'historique') chargerHistorique();
     if (name === 'commande') {
         setTimeout(() => {
+            const etapeArticles = document.getElementById('etape-articles');
+            if (!etapeArticles || etapeArticles.style.display === 'none') return; // encore sur l'étape Document
             const inp = document.getElementById('inp-ean');
-            if (inp) inp.focus();
+            if (inp) {
+                // Toujours repartir en mode scannette en arrivant sur la page,
+                // même si la saisie manuelle était restée activée avant
+                if (typeof modeSaisieManuelle !== 'undefined' && modeSaisieManuelle) {
+                    modeSaisieManuelle = false;
+                    inp.placeholder = 'Scannette Bluetooth...';
+                    inp.setAttribute('inputmode', 'none');
+                    if (typeof majBoutonsMode === 'function') majBoutonsMode();
+                }
+                inp.focus();
+            }
         }, 300);
     }
     if (name === 'sync') chargerStats();
@@ -1557,6 +1596,7 @@ async function validerCommande() {
         const btnBL = document.getElementById('btn-bl');
         if (btnBL) { btnBL.classList.remove('active'); }
         renderPanier();
+        allerEtapeDocument();
     }, 100);
 
     // Revenir à l'accueil
@@ -2408,17 +2448,16 @@ function onEanInput(el) {
     // Annuler le timer précédent
     if (eanTimer) { clearTimeout(eanTimer); eanTimer = null; }
 
-    // Saisie manuelle au clavier : pas de recherche automatique, on attend Entrée ou ➕
-    if (modeSaisieManuelle) return;
-
-    // Si plus de 13 chiffres → cumul, garder les 13 derniers
+    // Si plus de 13 chiffres → cumul, garder les 13 derniers.
+    // Toujours actif, même en mode "saisie manuelle" oublié activé : un vrai scan
+    // EAN13 ne doit jamais rester sans réponse.
     if (/^[0-9]+$/.test(val) && val.length > 13) {
         el.value = val.slice(-13);
         rechercherArticle();
         return;
     }
 
-    // EAN13 exact → attendre 150ms que la scannette finisse d'envoyer
+    // EAN13 exact → attendre 150ms que la scannette finisse d'envoyer (toujours actif)
     if (/^[0-9]{13}$/.test(val)) {
         eanTimer = setTimeout(() => {
             if (document.getElementById('inp-ean').value.trim().length === 13) {
@@ -2427,6 +2466,10 @@ function onEanInput(el) {
         }, 150);
         return;
     }
+
+    // Saisie manuelle au clavier : pas de recherche automatique sur un code court
+    // en cours de frappe, on attend Entrée ou ➕
+    if (modeSaisieManuelle) return;
 
     // Code numérique en cours → attendre 400ms (fin de saisie scannette)
     if (val.length >= 5 && /^[0-9]+$/.test(val)) {
