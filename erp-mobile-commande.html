@@ -1304,6 +1304,7 @@ function ajouterAuPanier() {
     const inpPrixVente = document.getElementById('inp-prix-vente');
     const prixBase = inpPrixVente ? (parseFloat(inpPrixVente.value) || 0) : (parseFloat(articleCourant.prixVente) || 0);
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
+    const prixNormalArticle = parseFloat(articleCourant.prixVente) || 0;
     const exist = panier.find(l => l.articleId === articleCourant.id);
     if (exist) {
         exist.quantite += qty;
@@ -1316,6 +1317,7 @@ function ajouterAuPanier() {
             quantite: qty,
             prixUnitaire: prixBase,
             prixUnitaireRemise: prixApresRemise,
+            prixNormalArticle: prixNormalArticle,
             remiseLigne: remiseLigne,
             tva: '20',
         });
@@ -1363,10 +1365,13 @@ function renderPanier() {
         const prixRemise = l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0);
         totalAvantRemise += prixRemise;
         const remiseLigne = l.remiseLigne || 0;
+        const puHT = (l.prixUnitaire || 0);
+        const prixSpecial = (l.prixNormalArticle !== undefined) && Math.abs(puHT - l.prixNormalArticle) > 0.001;
         html += '<div class="ligne">'
             + '<div style="flex:1;min-width:0;">'
             + '<div class="l-ref">' + (l.reference || l.ean || '') + '</div>'
             + '<div class="l-name">' + (l.designation || 'Article') + '</div>'
+            + '<div style="font-size:10px;color:var(--text-2);">PU HT: ' + puHT.toFixed(2).replace('.',',') + ' €' + (prixSpecial ? ' · <span style="color:#d97706;font-weight:700;">⚠️ Prix spécial</span> (au lieu de ' + l.prixNormalArticle.toFixed(2).replace('.',',') + ' €)' : '') + '</div>'
             + (remiseLigne > 0 ? '<div style="font-size:10px;color:var(--danger);">Remise ligne: -' + remiseLigne + '%</div>' : '')
             + '</div>'
             + '<div class="l-qty">' + l.quantite + ' ×</div>'
