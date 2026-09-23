@@ -290,6 +290,11 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button class="qty-btn" onclick="changeQty(1)">＋</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Prix vente HT</label>
+          <input type="number" id="inp-prix-vente" value="0" min="0" step="0.01" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:90px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
+          <span style="font-size:11px;color:var(--text-2);white-space:nowrap;">€ — pour cette commande</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
           <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
@@ -1267,6 +1272,8 @@ async function rechercherArticle() {
             + '</div></div>';
         zoneQty.style.display = '';
         document.getElementById('inp-ean').value = '';
+        const inpPrix = document.getElementById('inp-prix-vente');
+        if (inpPrix) inpPrix.value = (parseFloat(art.prixVente) || 0).toFixed(2);
         toast('✅ ' + (art.reference || 'Article') + ' trouvé', 'success');
     } else {
         articleCourant = null;
@@ -1294,7 +1301,8 @@ function ajouterAuPanier() {
     const remiseLigneInput = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
     const remiseDefaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value || 0) || 0;
     const remiseLigne = remiseLigneInput > 0 ? remiseLigneInput : remiseDefaut;
-    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const inpPrixVente = document.getElementById('inp-prix-vente');
+    const prixBase = inpPrixVente ? (parseFloat(inpPrixVente.value) || 0) : (parseFloat(articleCourant.prixVente) || 0);
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
     const exist = panier.find(l => l.articleId === articleCourant.id);
     if (exist) {
@@ -1471,10 +1479,11 @@ function validerRemiseLigne(el) {
 function mettreAJourPrixRemise() {
     if (!articleCourant) return;
     const remise = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
-    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const inpPrix = document.getElementById('inp-prix-vente');
+    const prixBase = inpPrix ? (parseFloat(inpPrix.value) || 0) : (parseFloat(articleCourant.prixVente) || 0);
     const prixRemise = prixBase * (1 - remise/100);
     const el = document.getElementById('prix-apres-remise');
-    if (el) el.textContent = remise > 0 ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
+    if (el) el.textContent = (remise > 0 || prixBase !== (parseFloat(articleCourant.prixVente)||0)) ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
 }
 
 function supprimerLigne(idx) {
