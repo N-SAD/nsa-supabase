@@ -621,6 +621,27 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
   </div>
 </div>
 
+<!-- MODAL CLAVIER MANUEL (indépendant du clavier iOS, fonctionne scannette connectée) -->
+<div id="modal-clavier-manuel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:14px;font-weight:700;color:var(--primary);">⌨️ Saisie manuelle</div>
+      <button onclick="fermerClavierManuel()" style="background:#f1f5f9;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <div id="clavier-manuel-valeur" style="flex:1;font-size:20px;font-weight:700;letter-spacing:1px;min-height:26px;word-break:break-all;">&nbsp;</div>
+      <button onclick="clavierManuelBackspace()" style="background:#e2e8f0;border:none;border-radius:8px;padding:8px 12px;font-size:16px;cursor:pointer;">⌫</button>
+    </div>
+    <div id="clavier-manuel-grille" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+      <button onclick="clavierManuelBasculerLayout()" id="btn-clavier-layout" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">ABC</button>
+      <button onclick="clavierManuelEspace()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Espace</button>
+    </div>
+    <button onclick="clavierManuelValider()" style="background:#059669;color:white;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">🔍 Rechercher cet article</button>
+    <button onclick="clavierManuelReprendreScannette()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;">🔌 Reprendre la scannette</button>
+  </div>
+</div>
+
 <!-- MODAL LISTE CLIENTS COMMANDE -->
 <div id="modal-liste-clients-cmd" style="display:none;position:fixed;inset:0;background:white;z-index:1000;overflow-y:auto;">
   <!-- Header sticky -->
@@ -2536,25 +2557,77 @@ function majBoutonsMode() {
     }
 }
 
+// Clavier tactile maison : tant que la scannette Bluetooth est connectée, iOS masque
+// le clavier système sur les champs de saisie (elle est vue comme un clavier physique).
+// Ce pavé de boutons ne dépend pas du clavier iOS et fonctionne donc toujours.
+const CLAVIER_LAYOUT_CHIFFRES = ['1','2','3','4','5','6','7','8','9','0'];
+const CLAVIER_LAYOUT_LETTRES = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','-','/'];
+let clavierManuelLayout = 'chiffres';
+let clavierManuelValeur = '';
+
 function saisieManuelleRef() {
-    // Bascule en mode clavier : le champ reste en saisie texte jusqu'au clic sur "Scannette"
     modeSaisieManuelle = true;
     desactiverScanFocus();
     const inp = document.getElementById('inp-ean');
-    inp.onblur = null;
     inp.value = '';
-    inp.readOnly = false;
-    inp.placeholder = 'Tapez la référence puis Entrée...';
-    inp.setAttribute('inputmode', 'text');
-    inp.setAttribute('enterkeyhint', 'search');
-    inp.setAttribute('autocapitalize', 'characters');
+    clavierManuelValeur = '';
     majBoutonsMode();
-    // iOS ne change pas le clavier d'un champ déjà actif : on quitte puis on reprend le focus
-    inp.blur();
-    inp.focus();
-    inp.click();
-    setTimeout(() => { if (document.activeElement !== inp) inp.focus(); }, 120);
-    toast('⌨️ Mode saisie manuelle', 'success');
+    clavierManuelLayout = 'chiffres';
+    document.getElementById('clavier-manuel-valeur').innerHTML = '&nbsp;';
+    clavierManuelRenderGrille();
+    document.getElementById('modal-clavier-manuel').style.display = 'flex';
+}
+
+function clavierManuelRenderGrille() {
+    const grille = document.getElementById('clavier-manuel-grille');
+    const touches = clavierManuelLayout === 'chiffres' ? CLAVIER_LAYOUT_CHIFFRES : CLAVIER_LAYOUT_LETTRES;
+    grille.innerHTML = touches.map(t =>
+        '<button onclick="clavierManuelSaisir(\''+t+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">'+t+'</button>'
+    ).join('');
+    const btnLayout = document.getElementById('btn-clavier-layout');
+    if (btnLayout) btnLayout.textContent = clavierManuelLayout === 'chiffres' ? 'ABC' : '123';
+}
+
+function clavierManuelBasculerLayout() {
+    clavierManuelLayout = clavierManuelLayout === 'chiffres' ? 'lettres' : 'chiffres';
+    clavierManuelRenderGrille();
+}
+
+function clavierManuelSaisir(car) {
+    clavierManuelValeur += car;
+    clavierManuelMajAffichage();
+}
+
+function clavierManuelEspace() {
+    clavierManuelValeur += ' ';
+    clavierManuelMajAffichage();
+}
+
+function clavierManuelBackspace() {
+    clavierManuelValeur = clavierManuelValeur.slice(0, -1);
+    clavierManuelMajAffichage();
+}
+
+function clavierManuelMajAffichage() {
+    const inp = document.getElementById('inp-ean');
+    inp.value = clavierManuelValeur;
+    onEanInput(inp);
+    const aff = document.getElementById('clavier-manuel-valeur');
+    aff.innerHTML = clavierManuelValeur ? clavierManuelValeur : '&nbsp;';
+}
+
+function clavierManuelValider() {
+    document.getElementById('modal-clavier-manuel').style.display = 'none';
+    rechercherArticle();
+}
+
+function fermerClavierManuel() {
+    document.getElementById('modal-clavier-manuel').style.display = 'none';
+}
+
+function clavierManuelReprendreScannette() {
+    document.getElementById('modal-clavier-manuel').style.display = 'none';
+    focusScan();
 }
 
 function basculerModeSaisie() {
