@@ -292,7 +292,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Prix vente HT</label>
           <input type="number" id="inp-prix-vente" value="0" min="0" step="0.01" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:90px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
-          <span style="font-size:11px;color:var(--text-2);white-space:nowrap;">€ — pour cette commande</span>
+          <button onclick="ouvrirClavierManuel('inp-prix-vente')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;">⌨️</button>
+          <span style="font-size:11px;color:var(--text-2);white-space:nowrap;">€</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
@@ -637,8 +638,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
       <button onclick="clavierManuelBasculerLayout()" id="btn-clavier-layout" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">ABC</button>
       <button onclick="clavierManuelEspace()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Espace</button>
     </div>
-    <button onclick="clavierManuelValider()" style="background:#059669;color:white;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">🔍 Rechercher cet article</button>
-    <button onclick="clavierManuelReprendreScannette()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;">🔌 Reprendre la scannette</button>
+    <button id="btn-clavier-valider" onclick="clavierManuelValider()" style="background:#059669;color:white;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">🔍 Rechercher cet article</button>
+    <button id="btn-clavier-bas" onclick="clavierManuelReprendreScannette()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;">🔌 Reprendre la scannette</button>
   </div>
 </div>
 
@@ -2560,30 +2561,52 @@ function majBoutonsMode() {
 // Clavier tactile maison : tant que la scannette Bluetooth est connectée, iOS masque
 // le clavier système sur les champs de saisie (elle est vue comme un clavier physique).
 // Ce pavé de boutons ne dépend pas du clavier iOS et fonctionne donc toujours.
-const CLAVIER_LAYOUT_CHIFFRES = ['1','2','3','4','5','6','7','8','9','0'];
+const CLAVIER_LAYOUT_CHIFFRES = ['1','2','3','4','5','6','7','8','9',',','0','⌫'];
 const CLAVIER_LAYOUT_LETTRES = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','-','/'];
 let clavierManuelLayout = 'chiffres';
 let clavierManuelValeur = '';
+let clavierManuelCible = 'inp-ean';   // id du champ visé (n'importe quel champ de l'appli)
+let clavierManuelModeRecherche = true; // true = champ scan (Entrée = recherche), false = simple saisie de valeur
 
 function saisieManuelleRef() {
     modeSaisieManuelle = true;
     desactiverScanFocus();
-    const inp = document.getElementById('inp-ean');
-    inp.value = '';
-    clavierManuelValeur = '';
     majBoutonsMode();
+    ouvrirClavierManuel('inp-ean', true);
+}
+
+// Ouvre le clavier tactile pour n'importe quel champ de l'appli (référence scan, prix, etc.).
+// Utile tant que la scannette Bluetooth est connectée : iOS masque alors son propre clavier.
+function ouvrirClavierManuel(champId, modeRecherche) {
+    clavierManuelCible = champId;
+    clavierManuelModeRecherche = !!modeRecherche;
+    const champ = document.getElementById(champId);
+    clavierManuelValeur = champ ? String(champ.value || '').replace('.', ',') : '';
     clavierManuelLayout = 'chiffres';
-    document.getElementById('clavier-manuel-valeur').innerHTML = '&nbsp;';
+    document.getElementById('clavier-manuel-valeur').innerHTML = clavierManuelValeur || '&nbsp;';
     clavierManuelRenderGrille();
+
+    // Adapter les boutons du bas selon le champ visé
+    const btnValider = document.getElementById('btn-clavier-valider');
+    const btnBas = document.getElementById('btn-clavier-bas');
+    if (clavierManuelModeRecherche) {
+        btnValider.textContent = '🔍 Rechercher cet article';
+        btnBas.textContent = '🔌 Reprendre la scannette';
+        btnBas.style.display = '';
+    } else {
+        btnValider.textContent = '✓ Valider';
+        btnBas.style.display = 'none';
+    }
     document.getElementById('modal-clavier-manuel').style.display = 'flex';
 }
 
 function clavierManuelRenderGrille() {
     const grille = document.getElementById('clavier-manuel-grille');
     const touches = clavierManuelLayout === 'chiffres' ? CLAVIER_LAYOUT_CHIFFRES : CLAVIER_LAYOUT_LETTRES;
-    grille.innerHTML = touches.map(t =>
-        '<button onclick="clavierManuelSaisir(\''+t+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">'+t+'</button>'
-    ).join('');
+    grille.innerHTML = touches.map(t => {
+        if (t === '⌫') return '<button onclick="clavierManuelBackspace()" style="background:#e2e8f0;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">⌫</button>';
+        return '<button onclick="clavierManuelSaisir(\''+t+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">'+t+'</button>';
+    }).join('');
     const btnLayout = document.getElementById('btn-clavier-layout');
     if (btnLayout) btnLayout.textContent = clavierManuelLayout === 'chiffres' ? 'ABC' : '123';
 }
@@ -2594,6 +2617,8 @@ function clavierManuelBasculerLayout() {
 }
 
 function clavierManuelSaisir(car) {
+    // Une seule virgule décimale
+    if (car === ',' && clavierManuelValeur.includes(',')) return;
     clavierManuelValeur += car;
     clavierManuelMajAffichage();
 }
@@ -2609,16 +2634,19 @@ function clavierManuelBackspace() {
 }
 
 function clavierManuelMajAffichage() {
-    const inp = document.getElementById('inp-ean');
-    inp.value = clavierManuelValeur;
-    onEanInput(inp);
+    const champ = document.getElementById(clavierManuelCible);
+    if (champ) {
+        // Les champs numériques HTML n'acceptent que le point comme séparateur décimal
+        champ.value = clavierManuelValeur.replace(',', '.');
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     const aff = document.getElementById('clavier-manuel-valeur');
     aff.innerHTML = clavierManuelValeur ? clavierManuelValeur : '&nbsp;';
 }
 
 function clavierManuelValider() {
     document.getElementById('modal-clavier-manuel').style.display = 'none';
-    rechercherArticle();
+    if (clavierManuelModeRecherche) rechercherArticle();
 }
 
 function fermerClavierManuel() {
