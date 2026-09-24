@@ -235,6 +235,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <label>Remise ligne par défaut (%)</label>
           <div style="display:flex;align-items:center;gap:8px;">
             <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
+            <button onclick="ouvrirClavierManuel('remise-ligne-defaut')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;cursor:pointer;">⌨️</button>
             <span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
           </div>
         </div>
@@ -298,6 +299,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
           <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
+          <button onclick="ouvrirClavierManuel('inp-remise-ligne')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;">⌨️</button>
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -2580,8 +2582,9 @@ function saisieManuelleRef() {
 function ouvrirClavierManuel(champId, modeRecherche) {
     clavierManuelCible = champId;
     clavierManuelModeRecherche = !!modeRecherche;
-    const champ = document.getElementById(champId);
-    clavierManuelValeur = champ ? String(champ.value || '').replace('.', ',') : '';
+    // Toujours repartir d'un champ vide : la saisie tactile remplace l'ancienne valeur,
+    // elle ne s'ajoute pas derrière (évite par ex. "0" + "15" = "015")
+    clavierManuelValeur = '';
     clavierManuelLayout = 'chiffres';
     document.getElementById('clavier-manuel-valeur').innerHTML = clavierManuelValeur || '&nbsp;';
     clavierManuelRenderGrille();
