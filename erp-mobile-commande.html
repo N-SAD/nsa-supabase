@@ -1763,10 +1763,20 @@ function rafraichirLignesDoc() {
         ? '<p style="color:var(--text-2);font-size:13px;text-align:center;padding:10px;">Aucune ligne</p>'
         : lignes.map((l, i) => {
             const total = (l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0)).toFixed(2).replace('.',',');
+            const puBrut = (l.prixUnitaire || 0);
+            const puNet = (l.prixUnitaireRemise !== undefined ? l.prixUnitaireRemise : puBrut);
+            const remiseAppliquee = (l.remiseLigne || 0) > 0 || Math.abs(puNet - puBrut) > 0.001;
+            const prixSpecial = (l.prixNormalArticle !== undefined) && Math.abs(puBrut - l.prixNormalArticle) > 0.001;
+            const puLigne = '<div style="font-size:11px;color:var(--text-2);margin-top:2px;">'
+                + 'PU HT brut : ' + puBrut.toFixed(2).replace('.',',') + ' €'
+                + (remiseAppliquee ? ' · net : ' + puNet.toFixed(2).replace('.',',') + ' €' : '')
+                + (prixSpecial ? ' · <span style="color:#d97706;font-weight:700;">⚠️ prix spécial</span> (au lieu de ' + l.prixNormalArticle.toFixed(2).replace('.',',') + ' €)' : '')
+                + '</div>';
             return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
                 + '<div style="flex:1;min-width:0;">'
                 + '<div style="font-size:12px;font-weight:700;color:var(--primary);">' + (l.reference || l.ean || '') + '</div>'
                 + '<div style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (l.designation || '') + '</div>'
+                + puLigne
                 + '<div style="display:flex;align-items:center;gap:4px;margin-top:3px;">'
                 + '<span style="font-size:11px;color:var(--text-2);">Remise%</span>'
                 + '<input type="number" min="0" max="100" step="0.5" inputmode="decimal" value="' + (l.remiseLigne||0) + '" data-i="' + i + '" onchange="changerRemiseLigneDoc(parseInt(this.dataset.i),this.value)" onclick="this.select()" style="width:45px;padding:2px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;text-align:center;">'
