@@ -219,7 +219,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         </div>
         <div class="field">
           <label>Référence / Remarque</label>
-          <input type="text" id="inp-ref" placeholder="Réf commande client...">
+          <div style="display:flex;gap:6px;"><input type="text" id="inp-ref" placeholder="Réf commande client..." autocomplete="off" style="flex:1;min-width:0;"><button type="button" onclick="vkbOuvrir('inp-ref')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;cursor:pointer;flex-shrink:0;">⌨️</button></div>
         </div>
         <div class="field">
           <label>Date de livraison souhaitée</label>
@@ -230,8 +230,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
         <div class="field">
           <label>Remise ligne par défaut (%)</label>
           <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
-            <span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
+            <input type="text" id="remise-ligne-defaut" value="0" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
+            <button type="button" onclick="vkbOuvrir('remise-ligne-defaut','num')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;">⌨️</button><span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
           </div>
         </div>
       </div>
@@ -620,16 +620,16 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
   <div style="padding:16px;">
     <div id="na-info" style="font-size:12px;background:#fef3c7;border-radius:8px;padding:8px 12px;margin-bottom:14px;"></div>
     <div class="field"><label>EAN13</label>
-      <div style="display:flex;gap:6px;"><input type="text" id="na-ean" inputmode="numeric" onfocus="window.vkbCible=this" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-ean')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
+      <div style="display:flex;gap:6px;"><input type="text" id="na-ean" inputmode="numeric" onfocus="window.vkbCible=this" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-ean','int')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
     <div class="field"><label>Référence *</label>
       <div style="display:flex;gap:6px;"><input type="text" id="na-ref" autocapitalize="characters" autocomplete="off" autocorrect="off" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-ref')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
     <div class="field"><label>Désignation *</label>
       <div style="display:flex;gap:6px;"><input type="text" id="na-nom" autocomplete="off" autocorrect="off" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-nom')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="field"><label>Prix vente HT</label>
-        <div style="display:flex;gap:6px;"><input type="text" id="na-pv" inputmode="decimal" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pv')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
+        <div style="display:flex;gap:6px;"><input type="text" id="na-pv" inputmode="decimal" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pv','num')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
       <div class="field"><label>PCB</label>
-        <div style="display:flex;gap:6px;"><input type="text" id="na-pcb" inputmode="numeric" value="1" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pcb')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
+        <div style="display:flex;gap:6px;"><input type="text" id="na-pcb" inputmode="numeric" value="1" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pcb','int')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
     </div>
     <button onclick="sauvegarderNouvelArticle()" style="width:100%;background:#10b981;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;">💾 Créer et ajouter à la commande</button>
   </div>
@@ -1265,7 +1265,7 @@ function ajouterAuPanier() {
     if (!articleCourant) return;
     const qty = parseInt(document.getElementById('inp-qty').value) || 1;
     const remiseLigneInput = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
-    const remiseDefaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value || 0) || 0;
+    const remiseDefaut = parseFloat(String(document.getElementById('remise-ligne-defaut')?.value || 0).replace(',', '.')) || 0;
     const remiseLigne = remiseLigneInput > 0 ? remiseLigneInput : remiseDefaut;
     const prixBase = parseFloat(articleCourant.prixVente) || 0;
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
@@ -1287,7 +1287,7 @@ function ajouterAuPanier() {
     }
     // Reset remise ligne
     // Remettre la remise ligne à la valeur par défaut
-    const defaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value) || 0;
+    const defaut = parseFloat(String(document.getElementById('remise-ligne-defaut')?.value).replace(',', '.')) || 0;
     document.getElementById('inp-remise-ligne').value = defaut;
     // Vider le champ EAN pour le prochain scan
     const inpEan = document.getElementById('inp-ean');
@@ -1418,7 +1418,7 @@ function bloquerScanRemise(event) {
 }
 
 function mettreAJourRemiseLigneDefaut() {
-    const val = parseFloat(document.getElementById('remise-ligne-defaut').value) || 0;
+    const val = parseFloat(String(document.getElementById('remise-ligne-defaut').value).replace(',', '.')) || 0;
     // Mettre à jour le champ remise ligne visible
     const inpRemiseLigne = document.getElementById('inp-remise-ligne');
     if (inpRemiseLigne) {
@@ -2487,48 +2487,63 @@ let modeSaisieManuelle = false;
 // ============================================================
 // NOUVEL ARTICLE + CLAVIER INTÉGRÉ
 // ============================================================
-window.vkbCible = null; window.vkbOuvert = false; let vkbMaj = false;
-const VKB_ROWS = [
+window.vkbCible = null; window.vkbOuvert = false; window.vkbMode = 'full'; window.vkbPremier = false; let vkbMaj = false;
+const VKB_FULL = [
   ['1','2','3','4','5','6','7','8','9','0'],
   ['a','z','e','r','t','y','u','i','o','p'],
   ['q','s','d','f','g','h','j','k','l','m'],
   ['⇧','w','x','c','v','b','n','⌫'],
   ['-','/','.',',','ESPACE','OK']
 ];
+const VKB_NUM  = [['1','2','3'],['4','5','6'],['7','8','9'],[',','0','⌫'],['OK']];
+const VKB_INT  = [['1','2','3'],['4','5','6'],['7','8','9'],['C','0','⌫'],['OK']];
 function vkbRender() {
-  const box = document.getElementById('vkb-rows');
-  box.innerHTML = VKB_ROWS.map(row => '<div style="display:flex;gap:4px;margin-bottom:4px;">' + row.map(k => {
-    const grow = k === 'ESPACE' ? 4 : (k === 'OK' || k === '⇧' || k === '⌫') ? 1.5 : 1;
+  const rows = window.vkbMode === 'num' ? VKB_NUM : window.vkbMode === 'int' ? VKB_INT : VKB_FULL;
+  const gros = window.vkbMode !== 'full';
+  document.getElementById('vkb-rows').innerHTML = rows.map(row => '<div style="display:flex;gap:6px;margin-bottom:6px;' + (gros ? 'max-width:360px;margin-left:auto;margin-right:auto;' : '') + '">' + row.map(k => {
+    const grow = k === 'ESPACE' ? 4 : (!gros && (k === 'OK' || k === '⇧' || k === '⌫')) ? 1.5 : 1;
     const lbl = (k.length === 1 && /[a-z]/.test(k) && vkbMaj) ? k.toUpperCase() : k;
-    const bg = k === 'OK' ? '#10b981;color:white' : (k === '⇧' && vkbMaj) ? '#2563eb;color:white' : 'white;color:#111';
-    return '<button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();vkbTouche(\'' + k.replace(/'/g, "\\'") + '\')" onclick="vkbTouche(\'' + k.replace(/'/g, "\\'") + '\')" style="flex:' + grow + ';padding:12px 0;border:none;border-radius:6px;background:' + bg + ';font-size:16px;font-weight:600;">' + (k === 'ESPACE' ? 'espace' : lbl) + '</button>';
+    const bg = k === 'OK' ? '#10b981;color:white' : (k === '⇧' && vkbMaj) ? '#2563eb;color:white' : (k === '⌫' || k === 'C') ? '#fca5a5;color:#111' : 'white;color:#111';
+    const kk = k.replace(/'/g, "\\'");
+    return '<button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();vkbTouche(\'' + kk + '\')" onclick="vkbTouche(\'' + kk + '\')" style="flex:' + grow + ';padding:' + (gros ? '16px 0' : '12px 0') + ';border:none;border-radius:8px;background:' + bg + ';font-size:' + (gros ? '22px' : '16px') + ';font-weight:600;">' + (k === 'ESPACE' ? 'espace' : lbl) + '</button>';
   }).join('') + '</div>').join('');
 }
 let vkbDernier = 0;
 function vkbTouche(k) {
-  // éviter le double déclenchement touchstart + click
-  const now = Date.now(); if (now - vkbDernier < 250) return; vkbDernier = now;
+  const now = Date.now(); if (now - vkbDernier < 200) return; vkbDernier = now;   // évite touchstart + click
   const el = window.vkbCible; if (!el) return;
+  const numerique = window.vkbMode !== 'full';
   if (k === 'OK') { vkbFermer(); return; }
   if (k === '⇧') { vkbMaj = !vkbMaj; vkbRender(); return; }
-  if (k === '⌫') { el.value = el.value.slice(0, -1); return; }
-  if (k === 'ESPACE') { el.value += ' '; return; }
-  el.value += (vkbMaj && /[a-z]/.test(k)) ? k.toUpperCase() : k;
-  if (vkbMaj) { vkbMaj = false; vkbRender(); }
+  if (k === 'C') { el.value = ''; window.vkbPremier = false; }
+  else if (k === '⌫') { el.value = window.vkbPremier ? '' : el.value.slice(0, -1); window.vkbPremier = false; }
+  else {
+    let car = k === 'ESPACE' ? ' ' : (vkbMaj && /[a-z]/.test(k)) ? k.toUpperCase() : k;
+    if (numerique && window.vkbPremier) { el.value = ''; }          // la 1re touche remplace l'ancienne valeur (ex. le 0)
+    window.vkbPremier = false;
+    if (car === ',') car = '.';
+    if (car === '.' && (el.value.includes('.') || el.value === '')) { if (el.value === '') el.value = '0'; else return; }
+    el.value += car;
+    if (vkbMaj) { vkbMaj = false; vkbRender(); }
+  }
+  el.dispatchEvent(new Event('input', {bubbles: true}));            // déclenche le recalcul (remise, etc.)
 }
-function vkbOuvrir(id) {
+function vkbOuvrir(id, mode) {
   const el = document.getElementById(id); if (!el) return;
-  window.vkbCible = el; window.vkbOuvert = true;
+  window.vkbCible = el; window.vkbOuvert = true; window.vkbMode = mode || 'full';
+  window.vkbPremier = window.vkbMode !== 'full';
   el.setAttribute('inputmode', 'none');
   document.getElementById('vkb-label').textContent = 'Saisie : ' + (el.closest('.field')?.querySelector('label')?.textContent || id);
   vkbRender();
   document.getElementById('vkb').style.display = 'block';
-  el.scrollIntoView({block: 'center'});
+  document.body.style.paddingBottom = '330px';
+  setTimeout(() => el.scrollIntoView({block: 'center', behavior: 'smooth'}), 50);
 }
 function vkbFermer() {
   document.getElementById('vkb').style.display = 'none';
+  document.body.style.paddingBottom = '';
   window.vkbOuvert = false;
-  if (window.vkbCible) window.vkbCible.setAttribute('inputmode', 'text');
+  if (window.vkbCible) window.vkbCible.setAttribute('inputmode', window.vkbMode === 'full' ? 'text' : 'decimal');
 }
 
 async function envoyerArticlesEnAttente() {
