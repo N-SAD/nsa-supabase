@@ -36,38 +36,6 @@ async function sb(method, table, body, params) {
     return text ? JSON.parse(text) : [];
 }
 
-// Lecture complète avec pagination (Supabase plafonne à 1000 lignes par requête)
-async function sbAll(table, params) {
-    const PAGE = 1000;
-    let all = [];
-    for (let offset = 0; offset < 200000; offset += PAGE) {
-        const url = `${SUPABASE_URL}/rest/v1/${table}${params}&limit=${PAGE}&offset=${offset}`;
-        const r = await fetch(url, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        const text = await r.text();
-        const rows = text ? JSON.parse(text) : [];
-        if (!Array.isArray(rows)) break;
-        all = all.concat(rows);
-        if (rows.length < PAGE) break;
-    }
-    return all;
-}
-
-// Comptage exact d'une table (sans le plafond de 1000)
-async function sbCount(table) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=id&limit=1`, {
-        headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'count=exact'
-        }
-    });
-    const range = r.headers.get('content-range') || '';
-    const total = parseInt(range.split('/')[1], 10);
-    return isNaN(total) ? 0 : total;
-}
-
 module.exports = async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -94,7 +62,7 @@ module.exports = async function handler(req, res) {
     if (action === 'ping' || url.includes('/api/ping')) {
         const stats = {};
         for (const s of STORES) {
-            try { stats[s] = await sbCount(s); }
+            try { const rows = await sb('GET', s, null, '?select=id'); stats[s] = rows.length; }
             catch(e) { stats[s] = 0; }
         }
         return res.json({ ok: true, stats });
@@ -116,14 +84,41 @@ module.exports = async function handler(req, res) {
             }
 
             // Préparer tous les objets à insérer
-            const toInsert = items.map(item => ({
+            let toInsert = items.map(item => ({
                 data: item,
                 numero: item.numero || item.reference || item.code || null,
                 source: item.source || 'pc'
             }));
 
+            // Anti-doublons : sans reset, ne jamais ajouter une référence/un code déjà présent
+            if (req.query.reset !== '1') {
+                try {
+                    const nums = toInsert.map(x => x.numero).filter(Boolean);
+                    const existing = [];
+                    for (let k = 0; k < nums.length; k += 40) {
+                        const chunk = nums.slice(k, k + 40).map(n => '"' + String(n).replace(/"/g, '') + '"').join(',');
+                        const ex = await sb('GET', store, null, `?numero=in.(${encodeURIComponent(chunk)})&select=id,numero`);
+                        if (Array.isArray(ex)) existing.push(...ex);
+                    }
+                    const byNum = new Map(existing.map(x => [x.numero, x.id]));
+                    const aInserer = [];
+                    for (const row of toInsert) {
+                        const idExist = row.numero ? byNum.get(row.numero) : null;
+                        if (idExist) {
+                            // un article créé sur mobile n'écrase jamais une fiche existante
+                            if (row.source !== 'mobile') {
+                                try { await sb('PATCH', store, { data: row.data }, `?id=eq.${idExist}`); updated++; } catch(e) {}
+                            }
+                        } else {
+                            aInserer.push(row);
+                        }
+                    }
+                    toInsert = aInserer;
+                } catch(e) { console.error('Anti-doublons:', e.message); }
+            }
+
             // Insérer en une seule requête (bulk insert Supabase)
-            try {
+            if (toInsert.length > 0) try {
                 const url = `${SUPABASE_URL}/rest/v1/${store}`;
                 const r = await fetch(url, {
                     method: 'POST',
@@ -181,7 +176,7 @@ module.exports = async function handler(req, res) {
     // GET /api/export/:store
     if (action === 'export' && store) {
         if (!STORES.includes(store)) return res.status(404).json({ error: 'Store inconnu' });
-        const rows = await sbAll(store, '?select=data,numero,source,created_at&order=created_at.desc,id.desc');
+        const rows = await sb('GET', store, null, '?select=data,numero,source,created_at&order=created_at.desc&limit=10000');
         const items = (rows || []).map(r => {
             // data peut être string ou objet selon Supabase
             let d = r.data;
@@ -199,7 +194,7 @@ module.exports = async function handler(req, res) {
             articles: ['reference','designation','descriptionCourte','codeBarres','categorie','composition','couleur','taille','prixAchat','prixVente','tva','conditionnement','stock','fournisseur'],
             clients: ['code','nom','contact','adresse1','cp','ville','telephone','email','conditionsPaiement','familleClient','remise'],
         };
-        const rows = await sbAll(store, '?select=data&order=created_at.desc,id.desc');
+        const rows = await sb('GET', store, null, '?select=data&order=created_at.desc&limit=10000');
         const champs = CHAMPS[store];
         const items = (rows || []).map((r, i) => {
             const d = r.data || {};
