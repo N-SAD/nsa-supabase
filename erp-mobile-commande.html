@@ -281,9 +281,15 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <input class="qty-val" type="number" id="inp-qty" value="1" min="1" max="9999" inputmode="numeric" oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
           <button class="qty-btn" onclick="changeQty(1)">＋</button>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Prix unitaire HT (€)</label>
+          <input type="text" id="inp-prix" data-label="Prix unitaire HT (€)" inputmode="decimal" autocomplete="off" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:90px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
+          <button type="button" onclick="vkbOuvrir('inp-prix','num')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:8px 14px;font-size:18px;cursor:pointer;flex-shrink:0;">⌨️</button>
+          <span id="prix-modifie" style="font-size:11px;color:#b45309;font-weight:700;"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
-          <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
+          <input type="text" id="inp-remise-ligne" data-label="Remise ligne (%)" value="0" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;"><button type="button" onclick="vkbOuvrir('inp-remise-ligne','num')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:8px;padding:8px 14px;font-size:18px;cursor:pointer;flex-shrink:0;">⌨️</button>
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -1230,6 +1236,7 @@ async function rechercherArticle() {
         // PCB : conditionnement de l'article (minimum de commande)
         const pcb = parseInt(art.conditionnement) || 1;
         document.getElementById('inp-qty').value = pcb;
+        document.getElementById('inp-prix').value = (parseFloat(art.prixVente) || 0).toFixed(2).replace('.', ',');
         const photoHTML = art.photo
             ? '<img src="' + art.photo + '" alt="">'
             : '<div class="art-icon">📦</div>';
@@ -1267,12 +1274,12 @@ function changeQty(delta) {
 function ajouterAuPanier() {
     if (!articleCourant) return;
     const qty = parseInt(document.getElementById('inp-qty').value) || 1;
-    const remiseLigneInput = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
+    const remiseLigneInput = parseFloat(String(document.getElementById('inp-remise-ligne')?.value || 0).replace(',', '.')) || 0;
     const remiseDefaut = parseFloat(String(document.getElementById('remise-ligne-defaut')?.value || 0).replace(',', '.')) || 0;
     const remiseLigne = remiseLigneInput > 0 ? remiseLigneInput : remiseDefaut;
-    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const prixBase = lirePrixCourant();
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
-    const exist = panier.find(l => l.articleId === articleCourant.id);
+    const exist = panier.find(l => l.articleId === articleCourant.id && Math.abs((l.prixUnitaire || 0) - prixBase) < 0.005);
     if (exist) {
         exist.quantite += qty;
     } else {
@@ -1444,16 +1451,31 @@ function validerRemiseLigne(el) {
     mettreAJourPrixRemise();
 }
 
+function lirePrixCourant() {
+    // prix saisi (virgule ou point) ; à défaut le prix catalogue
+    const brut = String(document.getElementById('inp-prix')?.value ?? '').replace(',', '.').trim();
+    const v = parseFloat(brut);
+    if (brut === '' || isNaN(v) || v < 0) return parseFloat(articleCourant?.prixVente) || 0;
+    return v;
+}
+
 function mettreAJourPrixRemise() {
     if (!articleCourant) return;
-    const remise = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
-    const prixBase = parseFloat(articleCourant.prixVente) || 0;
+    const remise = parseFloat(String(document.getElementById('inp-remise-ligne')?.value || 0).replace(',', '.')) || 0;
+    const prixBase = lirePrixCourant();
+    const cat = parseFloat(articleCourant.prixVente) || 0;
+    const info = document.getElementById('prix-modifie');
+    if (info) info.textContent = Math.abs(prixBase - cat) > 0.004 ? '✏️ prix modifié (catalogue ' + cat.toFixed(2).replace('.', ',') + ' €)' : '';
     const prixRemise = prixBase * (1 - remise/100);
     const el = document.getElementById('prix-apres-remise');
     if (el) el.textContent = remise > 0 ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
 }
 
 function supprimerLigne(idx) {
+    const l = panier[idx];
+    if (!l) return;
+    const nom = (l.reference || '') + (l.designation ? ' — ' + l.designation : '');
+    if (!confirm('Supprimer cet article du panier ?\n\n' + (nom || 'cette ligne'))) return;
     panier.splice(idx, 1);
     renderPanier();
 }
@@ -1754,7 +1776,9 @@ function changerRemiseLigneDoc(idx, valeur) {
 
 function supprimerLigneDoc(idx) {
     if (!docCourant) return;
-    if (!confirm('Supprimer cette ligne ?')) return;
+    const l = docCourant.lignes[idx];
+    const nom = l ? (l.reference || l.ean || '') + (l.designation ? ' — ' + l.designation : '') : '';
+    if (!confirm('Supprimer cette ligne ?\n\n' + nom)) return;
     docCourant.lignes.splice(idx, 1);
     rafraichirLignesDoc();
 }
@@ -2536,7 +2560,7 @@ function vkbOuvrir(id, mode) {
   window.vkbCible = el; window.vkbOuvert = true; window.vkbMode = mode || 'full';
   window.vkbPremier = window.vkbMode !== 'full';
   el.setAttribute('inputmode', 'none');
-  document.getElementById('vkb-label').textContent = 'Saisie : ' + (el.closest('.field')?.querySelector('label')?.textContent || id);
+  document.getElementById('vkb-label').textContent = 'Saisie : ' + (el.dataset.label || el.closest('.field')?.querySelector('label')?.textContent || id);
   vkbRender();
   document.getElementById('vkb').style.display = 'block';
   document.body.style.paddingBottom = '330px';
