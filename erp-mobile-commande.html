@@ -68,10 +68,10 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 .not-found { background:#fef2f2; border:2px solid #fca5a5; border-radius:12px; padding:10px 14px; color:#991b1b; font-size:13px; margin-bottom:8px; }
 
 /* QTÉ STEPPER */
-.qty-row { display:flex; align-items:center; justify-content:center; gap:0; background:#f1f5f9; border-radius:10px; overflow:hidden; margin-bottom:10px; }
+.qty-row { display:flex; align-items:center; gap:0; background:#f1f5f9; border-radius:10px; overflow:hidden; margin-bottom:10px; }
 .qty-btn { background:var(--primary); color:white; border:none; width:48px; height:48px; font-size:22px; cursor:pointer; flex-shrink:0; }
 .qty-btn:active { opacity:.8; }
-.qty-val { width:64px; flex:none; text-align:center; font-size:22px; font-weight:700; color:var(--text); background:transparent; border:none; outline:none; }
+.qty-val { flex:1; text-align:center; font-size:22px; font-weight:700; color:var(--text); background:transparent; border:none; outline:none; }
 
 /* TYPE DOC */
 .type-btns { display:flex; gap:8px; margin-bottom:10px; }
@@ -199,12 +199,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <div class="page" id="pg-commande">
 
       <!-- Client + Type doc -->
-      <div class="card" id="etape-document">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
-          <div class="card-title" style="margin-bottom:0;">📋 Document</div>
-          <div style="width:80px;"></div>
-        </div>
+      <div class="card">
+        <div class="card-title">📋 Document</div>
         <div class="type-btns">
           <button class="type-btn active" id="btn-cmd" onclick="setTypeDoc('commande')">🛒 Commande</button>
 
@@ -235,18 +231,10 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <label>Remise ligne par défaut (%)</label>
           <div style="display:flex;align-items:center;gap:8px;">
             <input type="number" id="remise-ligne-defaut" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" style="width:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-weight:700;text-align:center;" oninput="mettreAJourRemiseLigneDefaut()">
-            <button onclick="ouvrirClavierManuel('remise-ligne-defaut')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;cursor:pointer;">⌨️</button>
             <span style="font-size:13px;color:var(--text-2);">% — appliqué à chaque ligne</span>
           </div>
         </div>
-
-        <button onclick="allerEtapeArticles()" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:6px;">📦 Saisie des articles →</button>
       </div>
-      <!-- /etape-document -->
-
-      <div id="etape-articles" style="display:none;">
-      <button onclick="allerEtapeDocument()" style="background:#f1f5f9;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;">← Document</button>
-      <div id="resume-client-articles" style="font-size:12px;color:var(--text-2);margin:-4px 0 10px;"></div>
 
       <!-- SCAN -->
       <div class="scan-zone">
@@ -269,7 +257,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 
         <!-- Boutons rapides -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <button id="btn-saisie-manuelle" onclick="saisieManuelleRef()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+          <button onclick="saisieManuelleRef()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
             ⌨️ Saisie manuelle
           </button>
           <button id="btn-mode-scan" onclick="focusScan()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
@@ -291,15 +279,8 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <button class="qty-btn" onclick="changeQty(1)">＋</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Prix vente HT</label>
-          <input type="number" id="inp-prix-vente" value="0" min="0" step="0.01" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:90px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
-          <button onclick="ouvrirClavierManuel('inp-prix-vente')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;">⌨️</button>
-          <span style="font-size:11px;color:var(--text-2);white-space:nowrap;">€</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
           <label style="font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap;">Remise ligne (%)</label>
           <input type="number" id="inp-remise-ligne" value="0" min="0" max="100" step="0.5" inputmode="decimal" onclick="this.select()" oninput="mettreAJourPrixRemise()" style="width:70px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-weight:700;text-align:center;">
-          <button onclick="ouvrirClavierManuel('inp-remise-ligne')" style="background:#f1f5f9;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;">⌨️</button>
           <span id="prix-apres-remise" style="font-size:12px;color:var(--primary-light);font-weight:700;white-space:nowrap;"></span>
         </div>
         <button class="btn btn-success btn-full" onclick="ajouterAuPanier()">✅ Ajouter au panier</button>
@@ -329,7 +310,6 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
           <span>Total TTC</span><span id="total-ttc">0,00 €</span>
         </div>
       </div>
-      </div><!-- /etape-articles -->
 
     </div><!-- /pg-commande -->
 
@@ -376,11 +356,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- PAGE : CLIENTS LIST -->
     <div class="page" id="pg-clients-list">
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
-          <div class="card-title" style="margin-bottom:0;">👥 Clients</div>
-          <div style="width:80px;"></div>
-        </div>
+        <div class="card-title">👥 Clients</div>
         <input type="text" id="search-clients-list" placeholder="🔍 Rechercher..." oninput="filtrerClientsMobile()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;">
         <div id="liste-clients-mobile" style="font-size:13px;"></div>
       </div>
@@ -389,11 +365,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- PAGE : DEVIS -->
     <div class="page" id="pg-devis">
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
-          <div class="card-title" style="margin-bottom:0;">📝 Nouveau devis</div>
-          <div style="width:80px;"></div>
-        </div>
+        <div class="card-title">📝 Nouveau devis</div>
         <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Un devis peut être transféré en commande depuis l'historique.</p>
         <div class="field">
           <label>Client *</label>
@@ -446,11 +418,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
     <!-- PAGE : MODELES -->
     <div class="page" id="pg-modeles">
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
-          <div class="card-title" style="margin-bottom:0;">📋 Modèles de commande</div>
-          <div style="width:80px;"></div>
-        </div>
+        <div class="card-title">📋 Modèles de commande</div>
         <div id="liste-modeles" style="font-size:13px;"></div>
         <div style="margin-top:12px;">
           <button onclick="sauvegarderModele()" style="width:100%;background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:#065f46;cursor:pointer;">💾 Sauvegarder panier actuel comme modèle</button>
@@ -463,11 +431,7 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 
       <!-- CONNEXION RENDER -->
       <div class="card" id="card-render">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="goPage('accueil')" style="background:#f1f5f9;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">🏠 Accueil</button>
-          <div class="card-title" style="margin-bottom:0;">☁️ Serveur NSA</div>
-          <div style="width:80px;"></div>
-        </div>
+        <div class="card-title">☁️ Serveur NSA</div>
         <div id="render-status" style="text-align:center;font-size:13px;margin-bottom:10px;padding:8px;border-radius:8px;background:#f8fafc;">Non connecté</div>
         <div id="zone-login-render">
           <div class="field" style="margin-bottom:8px;">
@@ -624,27 +588,6 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
   </div>
 </div>
 
-<!-- MODAL CLAVIER MANUEL (indépendant du clavier iOS, fonctionne scannette connectée) -->
-<div id="modal-clavier-manuel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;align-items:flex-end;justify-content:center;">
-  <div style="background:white;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);">⌨️ Saisie manuelle</div>
-      <button onclick="fermerClavierManuel()" style="background:#f1f5f9;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">✕</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;background:#f1f5f9;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
-      <div id="clavier-manuel-valeur" style="flex:1;font-size:20px;font-weight:700;letter-spacing:1px;min-height:26px;word-break:break-all;">&nbsp;</div>
-      <button onclick="clavierManuelBackspace()" style="background:#e2e8f0;border:none;border-radius:8px;padding:8px 12px;font-size:16px;cursor:pointer;">⌫</button>
-    </div>
-    <div id="clavier-manuel-grille" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-      <button onclick="clavierManuelBasculerLayout()" id="btn-clavier-layout" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">ABC</button>
-      <button onclick="clavierManuelEspace()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Espace</button>
-    </div>
-    <button id="btn-clavier-valider" onclick="clavierManuelValider()" style="background:#059669;color:white;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">🔍 Rechercher cet article</button>
-    <button id="btn-clavier-bas" onclick="clavierManuelReprendreScannette()" style="background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;">🔌 Reprendre la scannette</button>
-  </div>
-</div>
-
 <!-- MODAL LISTE CLIENTS COMMANDE -->
 <div id="modal-liste-clients-cmd" style="display:none;position:fixed;inset:0;background:white;z-index:1000;overflow-y:auto;">
   <!-- Header sticky -->
@@ -664,6 +607,38 @@ html,body { height:100%; background:var(--bg); font-family: -apple-system, Blink
 
   <!-- Liste -->
   <div id="liste-clients-cmd" style="padding:0 16px;"></div>
+</div>
+
+
+<!-- MODAL NOUVEL ARTICLE -->
+<div id="modal-new-article" style="display:none;position:fixed;inset:0;background:white;z-index:1002;overflow-y:auto;padding-bottom:300px;">
+  <div style="background:#1e3a5f;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;">
+    <button onclick="fermerNouvelArticle()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;">✕</button>
+    <div style="flex:1;text-align:center;font-size:15px;font-weight:700;color:white;">➕ Nouvel article</div>
+    <div style="width:36px;"></div>
+  </div>
+  <div style="padding:16px;">
+    <div id="na-info" style="font-size:12px;background:#fef3c7;border-radius:8px;padding:8px 12px;margin-bottom:14px;"></div>
+    <div class="field"><label>EAN13</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="na-ean" inputmode="numeric" onfocus="window.vkbCible=this" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-ean')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
+    <div class="field"><label>Référence *</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="na-ref" autocapitalize="characters" autocomplete="off" autocorrect="off" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-ref')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
+    <div class="field"><label>Désignation *</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="na-nom" autocomplete="off" autocorrect="off" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-nom')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 14px;font-size:18px;">⌨️</button></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Prix vente HT</label>
+        <div style="display:flex;gap:6px;"><input type="text" id="na-pv" inputmode="decimal" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pv')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
+      <div class="field"><label>PCB</label>
+        <div style="display:flex;gap:6px;"><input type="text" id="na-pcb" inputmode="numeric" value="1" style="flex:1;min-width:0;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;"><button onclick="vkbOuvrir('na-pcb')" style="background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;padding:0 10px;font-size:16px;">⌨️</button></div></div>
+    </div>
+    <button onclick="sauvegarderNouvelArticle()" style="width:100%;background:#10b981;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;">💾 Créer et ajouter à la commande</button>
+  </div>
+</div>
+
+<!-- CLAVIER INTÉGRÉ (fonctionne même avec la scannette connectée) -->
+<div id="vkb" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#d1d5db;z-index:3000;padding:6px 4px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.25);">
+  <div id="vkb-label" style="font-size:11px;color:#374151;text-align:center;margin-bottom:4px;"></div>
+  <div id="vkb-rows"></div>
 </div>
 
 <!-- MODAL FICHE CLIENT -->
@@ -1007,25 +982,6 @@ function remplirSelectClients() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-function allerEtapeArticles() {
-    if (!document.getElementById('sel-client').value) {
-        toast('⚠️ Sélectionnez un client', 'warn');
-        return;
-    }
-    document.getElementById('etape-document').style.display = 'none';
-    document.getElementById('etape-articles').style.display = '';
-    const nom = document.getElementById('client-selectionne-nom').textContent;
-    const resume = document.getElementById('resume-client-articles');
-    if (resume) resume.textContent = '👤 ' + nom;
-    focusScan();
-}
-
-function allerEtapeDocument() {
-    desactiverScanFocus();
-    document.getElementById('etape-articles').style.display = 'none';
-    document.getElementById('etape-document').style.display = '';
-}
-
 function goPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1056,20 +1012,8 @@ function goPage(name) {
     if (name === 'historique') chargerHistorique();
     if (name === 'commande') {
         setTimeout(() => {
-            const etapeArticles = document.getElementById('etape-articles');
-            if (!etapeArticles || etapeArticles.style.display === 'none') return; // encore sur l'étape Document
             const inp = document.getElementById('inp-ean');
-            if (inp) {
-                // Toujours repartir en mode scannette en arrivant sur la page,
-                // même si la saisie manuelle était restée activée avant
-                if (typeof modeSaisieManuelle !== 'undefined' && modeSaisieManuelle) {
-                    modeSaisieManuelle = false;
-                    inp.placeholder = 'Scannette Bluetooth...';
-                    inp.setAttribute('inputmode', 'none');
-                    if (typeof majBoutonsMode === 'function') majBoutonsMode();
-                }
-                inp.focus();
-            }
+            if (inp) inp.focus();
         }, 300);
     }
     if (name === 'sync') chargerStats();
@@ -1296,14 +1240,12 @@ async function rechercherArticle() {
             + '</div></div>';
         zoneQty.style.display = '';
         document.getElementById('inp-ean').value = '';
-        const inpPrix = document.getElementById('inp-prix-vente');
-        if (inpPrix) inpPrix.value = (parseFloat(art.prixVente) || 0).toFixed(2);
         toast('✅ ' + (art.reference || 'Article') + ' trouvé', 'success');
     } else {
         articleCourant = null;
         zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong>'
             + '<div style="margin-top:10px;">'
-            + '<button onclick="creerNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
+            + '<button onclick="ouvrirNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
             + '</div></div>';
         zoneQty.style.display = 'none';
     }
@@ -1325,10 +1267,8 @@ function ajouterAuPanier() {
     const remiseLigneInput = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
     const remiseDefaut = parseFloat(document.getElementById('remise-ligne-defaut')?.value || 0) || 0;
     const remiseLigne = remiseLigneInput > 0 ? remiseLigneInput : remiseDefaut;
-    const inpPrixVente = document.getElementById('inp-prix-vente');
-    const prixBase = inpPrixVente ? (parseFloat(inpPrixVente.value) || 0) : (parseFloat(articleCourant.prixVente) || 0);
+    const prixBase = parseFloat(articleCourant.prixVente) || 0;
     const prixApresRemise = prixBase * (1 - remiseLigne / 100);
-    const prixNormalArticle = parseFloat(articleCourant.prixVente) || 0;
     const exist = panier.find(l => l.articleId === articleCourant.id);
     if (exist) {
         exist.quantite += qty;
@@ -1341,7 +1281,6 @@ function ajouterAuPanier() {
             quantite: qty,
             prixUnitaire: prixBase,
             prixUnitaireRemise: prixApresRemise,
-            prixNormalArticle: prixNormalArticle,
             remiseLigne: remiseLigne,
             tva: '20',
         });
@@ -1389,13 +1328,10 @@ function renderPanier() {
         const prixRemise = l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0);
         totalAvantRemise += prixRemise;
         const remiseLigne = l.remiseLigne || 0;
-        const puHT = (l.prixUnitaire || 0);
-        const prixSpecial = (l.prixNormalArticle !== undefined) && Math.abs(puHT - l.prixNormalArticle) > 0.001;
         html += '<div class="ligne">'
             + '<div style="flex:1;min-width:0;">'
             + '<div class="l-ref">' + (l.reference || l.ean || '') + '</div>'
             + '<div class="l-name">' + (l.designation || 'Article') + '</div>'
-            + '<div style="font-size:10px;color:var(--text-2);">PU HT: ' + puHT.toFixed(2).replace('.',',') + ' €' + (prixSpecial ? ' · <span style="color:#d97706;font-weight:700;">⚠️ Prix spécial</span> (au lieu de ' + l.prixNormalArticle.toFixed(2).replace('.',',') + ' €)' : '') + '</div>'
             + (remiseLigne > 0 ? '<div style="font-size:10px;color:var(--danger);">Remise ligne: -' + remiseLigne + '%</div>' : '')
             + '</div>'
             + '<div class="l-qty">' + l.quantite + ' ×</div>'
@@ -1508,11 +1444,10 @@ function validerRemiseLigne(el) {
 function mettreAJourPrixRemise() {
     if (!articleCourant) return;
     const remise = parseFloat(document.getElementById('inp-remise-ligne')?.value || 0) || 0;
-    const inpPrix = document.getElementById('inp-prix-vente');
-    const prixBase = inpPrix ? (parseFloat(inpPrix.value) || 0) : (parseFloat(articleCourant.prixVente) || 0);
+    const prixBase = parseFloat(articleCourant.prixVente) || 0;
     const prixRemise = prixBase * (1 - remise/100);
     const el = document.getElementById('prix-apres-remise');
-    if (el) el.textContent = (remise > 0 || prixBase !== (parseFloat(articleCourant.prixVente)||0)) ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
+    if (el) el.textContent = remise > 0 ? '→ ' + prixRemise.toFixed(2).replace('.',',') + ' €' : '';
 }
 
 function supprimerLigne(idx) {
@@ -1634,7 +1569,6 @@ async function validerCommande() {
         const btnBL = document.getElementById('btn-bl');
         if (btnBL) { btnBL.classList.remove('active'); }
         renderPanier();
-        allerEtapeDocument();
     }, 100);
 
     // Revenir à l'accueil
@@ -1763,20 +1697,10 @@ function rafraichirLignesDoc() {
         ? '<p style="color:var(--text-2);font-size:13px;text-align:center;padding:10px;">Aucune ligne</p>'
         : lignes.map((l, i) => {
             const total = (l.quantite * (l.prixUnitaireRemise || l.prixUnitaire || 0)).toFixed(2).replace('.',',');
-            const puBrut = (l.prixUnitaire || 0);
-            const puNet = (l.prixUnitaireRemise !== undefined ? l.prixUnitaireRemise : puBrut);
-            const remiseAppliquee = (l.remiseLigne || 0) > 0 || Math.abs(puNet - puBrut) > 0.001;
-            const prixSpecial = (l.prixNormalArticle !== undefined) && Math.abs(puBrut - l.prixNormalArticle) > 0.001;
-            const puLigne = '<div style="font-size:11px;color:var(--text-2);margin-top:2px;">'
-                + 'PU HT brut : ' + puBrut.toFixed(2).replace('.',',') + ' €'
-                + (remiseAppliquee ? ' · net : ' + puNet.toFixed(2).replace('.',',') + ' €' : '')
-                + (prixSpecial ? ' · <span style="color:#d97706;font-weight:700;">⚠️ prix spécial</span> (au lieu de ' + l.prixNormalArticle.toFixed(2).replace('.',',') + ' €)' : '')
-                + '</div>';
             return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">'
                 + '<div style="flex:1;min-width:0;">'
                 + '<div style="font-size:12px;font-weight:700;color:var(--primary);">' + (l.reference || l.ean || '') + '</div>'
                 + '<div style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (l.designation || '') + '</div>'
-                + puLigne
                 + '<div style="display:flex;align-items:center;gap:4px;margin-top:3px;">'
                 + '<span style="font-size:11px;color:var(--text-2);">Remise%</span>'
                 + '<input type="number" min="0" max="100" step="0.5" inputmode="decimal" value="' + (l.remiseLigne||0) + '" data-i="' + i + '" onchange="changerRemiseLigneDoc(parseInt(this.dataset.i),this.value)" onclick="this.select()" style="width:45px;padding:2px 4px;border:1px solid var(--border);border-radius:5px;font-size:11px;text-align:center;">'
@@ -2201,6 +2125,13 @@ async function syncDepuisServeur(store) {
             return;
         }
 
+        if (store === 'articles') {
+            // Conserver les articles créés sur mobile pas encore arrivés sur le serveur
+            const enAttente = (await dbAll('articles')).filter(x => x.creeSurMobile && !x.envoyeServeur);
+            const refs = new Set(items.map(i => String(i.reference || '').toLowerCase()));
+            items.forEach(i => { if (i.creeSurMobile) i.envoyeServeur = true; });
+            enAttente.forEach(x => { if (!refs.has(String(x.reference || '').toLowerCase())) items.push(x); });
+        }
         await dbClear(store);
         const saved = dbSaveAll(store, items);
         if (saved) {
@@ -2496,16 +2427,14 @@ function onEanInput(el) {
     // Annuler le timer précédent
     if (eanTimer) { clearTimeout(eanTimer); eanTimer = null; }
 
-    // Si plus de 13 chiffres → cumul, garder les 13 derniers.
-    // Toujours actif, même en mode "saisie manuelle" oublié activé : un vrai scan
-    // EAN13 ne doit jamais rester sans réponse.
+    // Si plus de 13 chiffres → cumul, garder les 13 derniers
     if (/^[0-9]+$/.test(val) && val.length > 13) {
         el.value = val.slice(-13);
         rechercherArticle();
         return;
     }
 
-    // EAN13 exact → attendre 150ms que la scannette finisse d'envoyer (toujours actif)
+    // EAN13 exact → attendre 150ms que la scannette finisse d'envoyer
     if (/^[0-9]{13}$/.test(val)) {
         eanTimer = setTimeout(() => {
             if (document.getElementById('inp-ean').value.trim().length === 13) {
@@ -2514,10 +2443,6 @@ function onEanInput(el) {
         }, 150);
         return;
     }
-
-    // Saisie manuelle au clavier : pas de recherche automatique sur un code court
-    // en cours de frappe, on attend Entrée ou ➕
-    if (modeSaisieManuelle) return;
 
     // Code numérique en cours → attendre 400ms (fin de saisie scannette)
     if (val.length >= 5 && /^[0-9]+$/.test(val)) {
@@ -2558,117 +2483,129 @@ function onEanKeydown(event) {
 
 let modeSaisieManuelle = false;
 
-function majBoutonsMode() {
-    const bm = document.getElementById('btn-saisie-manuelle');
-    const bs = document.getElementById('btn-mode-scan');
-    if (bm) {
-        bm.style.background = modeSaisieManuelle ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
-        bm.textContent = modeSaisieManuelle ? '⌨️ Saisie manuelle ✓' : '⌨️ Saisie manuelle';
-    }
-    if (bs) {
-        bs.style.background = (!modeSaisieManuelle && scanFocusActif) ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
-    }
+
+// ============================================================
+// NOUVEL ARTICLE + CLAVIER INTÉGRÉ
+// ============================================================
+window.vkbCible = null; window.vkbOuvert = false; let vkbMaj = false;
+const VKB_ROWS = [
+  ['1','2','3','4','5','6','7','8','9','0'],
+  ['a','z','e','r','t','y','u','i','o','p'],
+  ['q','s','d','f','g','h','j','k','l','m'],
+  ['⇧','w','x','c','v','b','n','⌫'],
+  ['-','/','.',',','ESPACE','OK']
+];
+function vkbRender() {
+  const box = document.getElementById('vkb-rows');
+  box.innerHTML = VKB_ROWS.map(row => '<div style="display:flex;gap:4px;margin-bottom:4px;">' + row.map(k => {
+    const grow = k === 'ESPACE' ? 4 : (k === 'OK' || k === '⇧' || k === '⌫') ? 1.5 : 1;
+    const lbl = (k.length === 1 && /[a-z]/.test(k) && vkbMaj) ? k.toUpperCase() : k;
+    const bg = k === 'OK' ? '#10b981;color:white' : (k === '⇧' && vkbMaj) ? '#2563eb;color:white' : 'white;color:#111';
+    return '<button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();vkbTouche(\'' + k.replace(/'/g, "\\'") + '\')" onclick="vkbTouche(\'' + k.replace(/'/g, "\\'") + '\')" style="flex:' + grow + ';padding:12px 0;border:none;border-radius:6px;background:' + bg + ';font-size:16px;font-weight:600;">' + (k === 'ESPACE' ? 'espace' : lbl) + '</button>';
+  }).join('') + '</div>').join('');
+}
+let vkbDernier = 0;
+function vkbTouche(k) {
+  // éviter le double déclenchement touchstart + click
+  const now = Date.now(); if (now - vkbDernier < 250) return; vkbDernier = now;
+  const el = window.vkbCible; if (!el) return;
+  if (k === 'OK') { vkbFermer(); return; }
+  if (k === '⇧') { vkbMaj = !vkbMaj; vkbRender(); return; }
+  if (k === '⌫') { el.value = el.value.slice(0, -1); return; }
+  if (k === 'ESPACE') { el.value += ' '; return; }
+  el.value += (vkbMaj && /[a-z]/.test(k)) ? k.toUpperCase() : k;
+  if (vkbMaj) { vkbMaj = false; vkbRender(); }
+}
+function vkbOuvrir(id) {
+  const el = document.getElementById(id); if (!el) return;
+  window.vkbCible = el; window.vkbOuvert = true;
+  el.setAttribute('inputmode', 'none');
+  document.getElementById('vkb-label').textContent = 'Saisie : ' + (el.closest('.field')?.querySelector('label')?.textContent || id);
+  vkbRender();
+  document.getElementById('vkb').style.display = 'block';
+  el.scrollIntoView({block: 'center'});
+}
+function vkbFermer() {
+  document.getElementById('vkb').style.display = 'none';
+  window.vkbOuvert = false;
+  if (window.vkbCible) window.vkbCible.setAttribute('inputmode', 'text');
 }
 
-// Clavier tactile maison : tant que la scannette Bluetooth est connectée, iOS masque
-// le clavier système sur les champs de saisie (elle est vue comme un clavier physique).
-// Ce pavé de boutons ne dépend pas du clavier iOS et fonctionne donc toujours.
-const CLAVIER_LAYOUT_CHIFFRES = ['1','2','3','4','5','6','7','8','9',',','0','⌫'];
-const CLAVIER_LAYOUT_LETTRES = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','-','/'];
-let clavierManuelLayout = 'chiffres';
-let clavierManuelValeur = '';
-let clavierManuelCible = 'inp-ean';   // id du champ visé (n'importe quel champ de l'appli)
-let clavierManuelModeRecherche = true; // true = champ scan (Entrée = recherche), false = simple saisie de valeur
+async function envoyerArticlesEnAttente() {
+  const attente = articles.filter(a => a.creeSurMobile && !a.envoyeServeur);
+  if (attente.length === 0) return 0;
+  const propres = attente.map(a => { const c = {...a}; delete c.envoyeServeur; return c; });
+  for (let essai = 0; essai < 2; essai++) {
+    try {
+      if (!serveurToken) await connexionAutoServeur();
+      if (!serveurToken) return 0;
+      const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 15000);
+      const r = await fetch(SERVEUR_URL + '/api/import/articles', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-Token': serveurToken},
+        body: JSON.stringify({articles: propres}),
+        signal: ctrl.signal
+      });
+      if (r.status === 401) { serveurToken = null; continue; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      attente.forEach(a => { a.envoyeServeur = true; });
+      dbSaveAll('articles', articles);
+      toast('☁️ ' + attente.length + ' article(s) envoyé(s) au serveur', 'success');
+      return attente.length;
+    } catch(e) { console.log('Envoi articles en attente:', e.message); return 0; }
+  }
+  return 0;
+}
+
+function ouvrirNouvelArticle(code) {
+  desactiverScanFocus();
+  const estEan = /^[0-9]{8,14}$/.test(code);
+  document.getElementById('na-ean').value = estEan ? code : '';
+  document.getElementById('na-ref').value = estEan ? '' : code;
+  document.getElementById('na-nom').value = '';
+  document.getElementById('na-pv').value = '';
+  document.getElementById('na-pcb').value = '1';
+  document.getElementById('na-info').textContent = estEan
+    ? '📷 Code-barres scanné placé dans EAN13. Saisissez la référence et la désignation (touche ⌨️ à côté de chaque champ).'
+    : 'Référence saisie : ' + code;
+  document.getElementById('modal-new-article').style.display = 'block';
+}
+function fermerNouvelArticle() {
+  vkbFermer();
+  document.getElementById('modal-new-article').style.display = 'none';
+}
+function sauvegarderNouvelArticle() {
+  const ref = document.getElementById('na-ref').value.trim();
+  const nom = document.getElementById('na-nom').value.trim();
+  const ean = document.getElementById('na-ean').value.trim();
+  const pv = parseFloat(String(document.getElementById('na-pv').value).replace(',', '.')) || 0;
+  const pcb = parseInt(document.getElementById('na-pcb').value) || 1;
+  if (!ref || !nom) { toast('⚠️ Référence et désignation obligatoires', 'warn'); return; }
+  if (articles.find(a => (a.reference || '').toLowerCase() === ref.toLowerCase())) { toast('⚠️ Cette référence existe déjà', 'warn'); return; }
+  const art = { id: Date.now(), reference: ref, designation: nom, descriptionCourte: nom, codeBarres: ean, prixVente: pv, prixAchat: 0, stock: 0, conditionnement: String(pcb), tva: '20', creeSurMobile: true, source: 'mobile', envoyeServeur: false };
+  articles.push(art);
+  dbSaveAll('articles', articles);
+  fermerNouvelArticle();
+  envoyerArticlesEnAttente();
+  document.getElementById('inp-ean').value = ref;
+  rechercherArticle();
+  toast('✅ Article créé : ' + ref, 'success');
+}
 
 function saisieManuelleRef() {
-    modeSaisieManuelle = true;
     desactiverScanFocus();
-    majBoutonsMode();
-    ouvrirClavierManuel('inp-ean', true);
-}
-
-// Ouvre le clavier tactile pour n'importe quel champ de l'appli (référence scan, prix, etc.).
-// Utile tant que la scannette Bluetooth est connectée : iOS masque alors son propre clavier.
-function ouvrirClavierManuel(champId, modeRecherche) {
-    clavierManuelCible = champId;
-    clavierManuelModeRecherche = !!modeRecherche;
-    // Toujours repartir d'un champ vide : la saisie tactile remplace l'ancienne valeur,
-    // elle ne s'ajoute pas derrière (évite par ex. "0" + "15" = "015")
-    clavierManuelValeur = '';
-    clavierManuelLayout = 'chiffres';
-    document.getElementById('clavier-manuel-valeur').innerHTML = clavierManuelValeur || '&nbsp;';
-    clavierManuelRenderGrille();
-
-    // Adapter les boutons du bas selon le champ visé
-    const btnValider = document.getElementById('btn-clavier-valider');
-    const btnBas = document.getElementById('btn-clavier-bas');
-    if (clavierManuelModeRecherche) {
-        btnValider.textContent = '🔍 Rechercher cet article';
-        btnBas.textContent = '🔌 Reprendre la scannette';
-        btnBas.style.display = '';
-    } else {
-        btnValider.textContent = '✓ Valider';
-        btnBas.style.display = 'none';
-    }
-    document.getElementById('modal-clavier-manuel').style.display = 'flex';
-}
-
-function clavierManuelRenderGrille() {
-    const grille = document.getElementById('clavier-manuel-grille');
-    const touches = clavierManuelLayout === 'chiffres' ? CLAVIER_LAYOUT_CHIFFRES : CLAVIER_LAYOUT_LETTRES;
-    grille.innerHTML = touches.map(t => {
-        if (t === '⌫') return '<button onclick="clavierManuelBackspace()" style="background:#e2e8f0;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">⌫</button>';
-        return '<button onclick="clavierManuelSaisir(\''+t+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;">'+t+'</button>';
-    }).join('');
-    const btnLayout = document.getElementById('btn-clavier-layout');
-    if (btnLayout) btnLayout.textContent = clavierManuelLayout === 'chiffres' ? 'ABC' : '123';
-}
-
-function clavierManuelBasculerLayout() {
-    clavierManuelLayout = clavierManuelLayout === 'chiffres' ? 'lettres' : 'chiffres';
-    clavierManuelRenderGrille();
-}
-
-function clavierManuelSaisir(car) {
-    // Une seule virgule décimale
-    if (car === ',' && clavierManuelValeur.includes(',')) return;
-    clavierManuelValeur += car;
-    clavierManuelMajAffichage();
-}
-
-function clavierManuelEspace() {
-    clavierManuelValeur += ' ';
-    clavierManuelMajAffichage();
-}
-
-function clavierManuelBackspace() {
-    clavierManuelValeur = clavierManuelValeur.slice(0, -1);
-    clavierManuelMajAffichage();
-}
-
-function clavierManuelMajAffichage() {
-    const champ = document.getElementById(clavierManuelCible);
-    if (champ) {
-        // Les champs numériques HTML n'acceptent que le point comme séparateur décimal
-        champ.value = clavierManuelValeur.replace(',', '.');
-        champ.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    const aff = document.getElementById('clavier-manuel-valeur');
-    aff.innerHTML = clavierManuelValeur ? clavierManuelValeur : '&nbsp;';
-}
-
-function clavierManuelValider() {
-    document.getElementById('modal-clavier-manuel').style.display = 'none';
-    if (clavierManuelModeRecherche) rechercherArticle();
-}
-
-function fermerClavierManuel() {
-    document.getElementById('modal-clavier-manuel').style.display = 'none';
-}
-
-function clavierManuelReprendreScannette() {
-    document.getElementById('modal-clavier-manuel').style.display = 'none';
-    focusScan();
+    const inp = document.getElementById('inp-ean');
+    inp.value = '';
+    inp.setAttribute('inputmode', 'text'); // Activer le clavier
+    inp.placeholder = 'Tapez la référence...';
+    inp.focus();
+    inp.click();
+    // Remettre en mode scannette après recherche
+    inp.onblur = () => {
+        inp.setAttribute('inputmode', 'none');
+        inp.placeholder = 'Scannette Bluetooth...';
+        inp.onblur = null;
+    };
 }
 
 function basculerModeSaisie() {
@@ -2696,108 +2633,20 @@ function basculerModeSaisie() {
 let scanFocusActif = false;
 let scanFocusInterval = null;
 
-let _scanReprise = false;
-let _creationCtx = 'commande';
-
-async function creerNouvelArticle(ref, ctx) {
-    _creationCtx = (ctx === 'devis') ? 'devis' : 'commande';
-    // Couper le focus automatique de la scannette : sinon il reprend la main
-    // toutes les 2 secondes et fait disparaître le clavier pendant la saisie
-    _scanReprise = scanFocusActif;
-    desactiverScanFocus();
-    const inpScan = document.getElementById(_creationCtx === 'devis' ? 'inp-ean-devis' : 'inp-ean');
-    if (inpScan) inpScan.blur();
-
-    const zone = document.getElementById(_creationCtx === 'devis' ? 'zone-article-devis' : 'zone-article');
-    const refSafe = String(ref || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    zone.innerHTML = `
-    <div class="card" style="border:2px solid #2563eb;">
-        <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:12px;">➕ Nouvel article</div>
-        <div class="field"><label>Référence *</label>
-            <input type="text" id="new-art-ref" value="${refSafe}" inputmode="text" autocomplete="off" autocapitalize="characters" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
-        </div>
-        <div class="field"><label>Désignation *</label>
-            <input type="text" id="new-art-nom" placeholder="Nom de l'article..." inputmode="text" autocomplete="off" autocapitalize="sentences" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div class="field"><label>Prix vente HT</label>
-                <input type="number" id="new-art-prix" value="0" step="0.01" inputmode="decimal" onclick="this.select()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
-            </div>
-            <div class="field"><label>EAN13</label>
-                <input type="text" id="new-art-ean" placeholder="Code barre..." inputmode="numeric" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
-            </div>
-        </div>
-        <button onclick="sauvegarderNouvelArticle()" style="background:#10b981;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;">💾 Créer et ajouter</button>
-    </div>`;
-    // Ouvrir le clavier directement sur la désignation
-    setTimeout(() => {
-        const n = document.getElementById('new-art-nom');
-        if (n) { n.focus(); n.click(); }
-    }, 150);
-}
-
-async function sauvegarderNouvelArticle() {
-    const ref = document.getElementById('new-art-ref').value.trim();
-    const nom = document.getElementById('new-art-nom').value.trim();
-    const prix = parseFloat(document.getElementById('new-art-prix').value) || 0;
-    const ean = document.getElementById('new-art-ean').value.trim();
-    if (!ref || !nom) { toast('⚠️ Référence et désignation obligatoires', 'warn'); return; }
-    const nouvelArt = {
-        id: Date.now(),
-        reference: ref,
-        designation: nom,
-        descriptionCourte: nom,
-        codeBarres: ean,
-        prixVente: prix,
-        prixAchat: 0,
-        stock: 0,
-        tva: '20',
-    };
-    // Sauvegarder dans la base locale
-    articles.push(nouvelArt);
-    await dbSaveAll('articles', articles);
-    const photoHTML = '<div class="art-icon">📦</div>';
-    const fiche = '<div class="article-found">' + photoHTML
-        + '<div class="art-info">'
-        + '<div class="art-ref">' + ref + '</div>'
-        + '<div class="art-name">' + nom + '</div>'
-        + '<div class="art-price">' + prix.toFixed(2).replace('.',',') + ' € HT</div>'
-        + '</div></div>';
-    if (_creationCtx === 'devis') {
-        articleDevisCourant = nouvelArt;
-        document.getElementById('zone-article-devis').innerHTML = fiche;
-        document.getElementById('inp-qty-devis').value = 1;
-        document.getElementById('zone-qty-devis').style.display = '';
-        document.getElementById('inp-ean-devis').value = '';
-    } else {
-        // Sélectionner cet article
-        articleCourant = nouvelArt;
-        document.getElementById('zone-article').innerHTML = fiche;
-        document.getElementById('inp-qty').value = 1;
-        document.getElementById('zone-qty').style.display = '';
-        document.getElementById('inp-ean').value = '';
-        // Remettre la scannette en veille active si elle l'était avant la création
-        if (_scanReprise) focusScan();
-    }
-    toast('✅ Article créé : ' + ref, 'success');
-}
-
 function focusScan() {
     const inp = document.getElementById('inp-ean');
     inp.value = '';
-    modeSaisieManuelle = false;
-    inp.placeholder = 'Scannette Bluetooth...';
     inp.setAttribute('inputmode', 'none'); // Pas de clavier virtuel
-    inp.setAttribute('autocapitalize', 'none');
     inp.focus({ preventScroll: true });
     scanFocusActif = true;
-    majBoutonsMode();
     // Maintenir le focus automatiquement toutes les 2 secondes
     if (scanFocusInterval) clearInterval(scanFocusInterval);
     scanFocusInterval = setInterval(() => {
         if (!scanFocusActif) { clearInterval(scanFocusInterval); return; }
         const el = document.getElementById('inp-ean');
-        if (el && document.activeElement !== el) {
+        const ae = document.activeElement;
+        const autreChamp = ae && ae !== el && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
+        if (el && ae !== el && !autreChamp && !window.vkbOuvert) {
             // Ne pas refocus si un modal est ouvert
             const modalOuvert = document.querySelector('[style*="display: block"][id^="modal"]')
                 || document.querySelector('[style*="display:block"][id^="modal"]');
@@ -2810,7 +2659,6 @@ function focusScan() {
 function desactiverScanFocus() {
     scanFocusActif = false;
     if (scanFocusInterval) { clearInterval(scanFocusInterval); scanFocusInterval = null; }
-    if (typeof majBoutonsMode === 'function') majBoutonsMode();
 }
 
 function onBarcodeNative(val) {
@@ -3057,7 +2905,7 @@ async function rechercherArticleDevis() {
         articleDevisCourant = null;
         zone.innerHTML = '<div class="not-found">⚠️ Aucun article trouvé pour : <strong>' + val + '</strong>'
             + '<div style="margin-top:10px;">'
-            + '<button onclick="creerNouvelArticle(\''+val+'\',\'devis\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
+            + '<button onclick="ouvrirNouvelArticle(\''+val+'\');" style="background:#2563eb;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">➕ Créer cet article</button>'
             + '</div></div>';
         zoneQty.style.display = 'none';
     }
@@ -3708,7 +3556,7 @@ async function connexionAutoServeur() {
 // ============================================================
 init().then(() => {
     // Connexion automatique au serveur après init
-    setTimeout(connexionAutoServeur, 1000);
+    setTimeout(async () => { await connexionAutoServeur(); envoyerArticlesEnAttente(); }, 1000);
 }).catch(e => console.error('Init error:', e));
 
 // Enregistrer le Service Worker pour PWA
